@@ -1,0 +1,28 @@
+
+enum Role {
+    OWNER
+    ADMIN
+    MENTOR
+}
+
+enum Topic {
+  MARKETING
+  FUNDING
+  HIRING
+  OPERATIONS
+  TECH
+  GENERAL
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}

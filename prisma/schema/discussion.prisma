@@ -1,0 +1,39 @@
+
+
+
+model Discussion {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  topic     Topic
+
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  comments  Comment[]
+
+  isPublic Boolean @default(true)
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("discussion")
+}
+
+model Comment {
+  id           String   @id @default(uuid())
+  content      String
+
+  discussionId String
+  discussion   Discussion @relation(fields: [discussionId], references: [id])
+
+  companyId    String
+  company      Company @relation(fields: [companyId], references: [id])
+
+  isEdited Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+
+  @@map("comment")
+}

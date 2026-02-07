@@ -1,0 +1,24 @@
+
+
+model Company {
+    id String @id @default(uuid())
+    name String
+    industry String
+    size String 
+    stage String
+    description String
+
+    ownerId String @unique
+    owner User @relation(fields: [ownerId], references: [id])
+
+    verificationStatus VerificationStatus @default(UNVERIFIED)
+    verifiedAt         DateTime?
+
+    discussions Discussion[]
+    comments    Comment[] 
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("company")
+}

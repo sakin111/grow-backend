@@ -1,0 +1,25 @@
+model User {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  password         String
+  role             Role     @default(OWNER)
+
+  company          Company?
+
+  emailVerified    Boolean  @default(false)
+  emailVerifiedAt  DateTime?
+   
+  status           UserStatus @default(ACTIVE) 
+  isDeleted Boolean @default(false)
+
+  isActive         Boolean  @default(true)
+  profileCompleted Boolean  @default(false)
+  lastLoginAt      DateTime?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+
+  @@map("user")
+}
