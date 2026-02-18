@@ -1,5 +1,6 @@
+import CatchAsync from "../../middleware/CatchAsync";
 
 
-export const login = () =>{
-
-}
+const login = CatchAsync(async(req:Request, res:Response) => {
+    
+})
