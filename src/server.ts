@@ -1,6 +1,7 @@
 import { Server } from "http";
 import { prisma } from "./app/lib/prisma";
 import { app } from "./app";
+import { seedAdmin } from "./app/shared/seedAdmin";
 
 
 let server: Server
@@ -19,6 +20,7 @@ export async function StartServer() {
 
 (async () => {
     await StartServer()
+    await seedAdmin()
 })()
 
 process.on("SIGTERM", (err) => {

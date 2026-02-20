@@ -1,9 +1,24 @@
+model Auth {
+  id         String   @id @default(uuid())
+  provider   Provider
+  providerId String
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("auth")
+}
 model User {
   id               String   @id @default(uuid())
   name             String
   email            String   @unique
   password         String
   role             Role     @default(OWNER)
+
+  auths            Auth[]
 
   company          Company?
 
@@ -23,3 +38,5 @@ model User {
 
   @@map("user")
 }
+
+

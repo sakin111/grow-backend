@@ -26,3 +26,10 @@ enum UserStatus {
   SUSPENDED
   BANNED
 }
+
+enum Provider {
+  CREDENTIALS
+  GOOGLE
+  FACEBOOK
+  TWITTER
+}
