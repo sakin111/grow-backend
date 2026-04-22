@@ -4,3 +4,4 @@ node_modules
 .gitignore
 prisma
 /dist
+.env.keys

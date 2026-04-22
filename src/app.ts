@@ -1,7 +1,8 @@
 import express, { Application, Request, Response } from 'express'
 import cors from 'cors'
 import router from './app/routes'
-import passport, { Passport } from "passport"
+import passport from "passport"
+import "./app/config/passport"
 import expressSession from "express-session"
 import { envVar } from './app/config/envVar'
 

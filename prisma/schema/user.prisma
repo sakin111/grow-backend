@@ -11,12 +11,14 @@ model Auth {
 
   @@map("auth")
 }
+
 model User {
   id               String   @id @default(uuid())
   name             String
   email            String   @unique
   password         String
   role             Role     @default(OWNER)
+  picture          String?
 
   auths            Auth[]
 

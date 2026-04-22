@@ -1,6 +1,4 @@
-import dotenv from "dotenv"
-
-dotenv.config()
+import '@dotenvx/dotenvx/config'
 
 
 export interface EnvType {
@@ -17,12 +15,13 @@ export interface EnvType {
     SUPER_ADMIN_PASSWORD: string
     SUPER_ADMIN: string
     BCRYPT_SALT_ROUND:string
+    FRONTEND_URL:string
 }
 
 
 
 export const envProvider = (): EnvType => {
-    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID","JWT_ACCESS_SECRET","JWT_ACCESS_EXPIRES","JWT_REFRESH_SECRET","JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN","BCRYPT_SALT_ROUND"]
+    const configKey: string[] = ["ENV_PORT","DATABASE_URL", "EXPRESS_SESSION_SECRET","GOOGLE_CALLBACK_URL","GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID","JWT_ACCESS_SECRET","JWT_ACCESS_EXPIRES","JWT_REFRESH_SECRET","JWT_REFRESH_EXPIRES","SUPER_ADMIN_PASSWORD", "SUPER_ADMIN","BCRYPT_SALT_ROUND","FRONTEND_URL"]
     configKey.forEach((key) => {
         if (!process.env[key]) {
             throw new Error(`Missing environment variable: ${key}`)
@@ -42,7 +41,8 @@ export const envProvider = (): EnvType => {
         JWT_REFRESH_EXPIRES: process.env.JWT_REFRESH_EXPIRES as string,
         SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD as string,
         SUPER_ADMIN: process.env.SUPER_ADMIN as string,
-        BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string
+        BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
+        FRONTEND_URL: process.env.FRONTEND_URL as string
 
     }
 }
