@@ -12,7 +12,7 @@ import AppError from "../errorHelper/AppError";
 
 export const createUserTokens = (user:Partial<User>) => {
     const jwtPayload = {
-        userId: user.id,
+        id: user.id,
         email: user.email,
         role: user.role
     }
@@ -45,7 +45,7 @@ export const createNewAccessTokenWithRefreshToken = async (refreshToken: string)
     }
 
     const jwtPayload = {
-        userId: isUserExist.id,
+        id: isUserExist.id,
         email: isUserExist.email,
         role: isUserExist.role
     }
