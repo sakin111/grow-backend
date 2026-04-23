@@ -42,13 +42,23 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_CALLBACK_URL || "",
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
-        const email = profile.email?.[0].value;
+        console.log("Google auth profile:", {
+            id: profile.id,
+            provider: profile.provider,
+            displayName: profile.displayName,
+            emails: profile.emails,
+            email: profile.email,
+            photos: profile.photos,
+        })
+
+        const email = profile.emails?.[0].value;
         if (!email) {
+            console.error("Google auth missing email in profile", profile)
             return done(null, false, { message: "Email is required" })
         }
 
         let userExist = await prisma.user.findUnique({
-            where: { email: profile.email?.[0].value }
+            where: { email }
         })
         
 
@@ -58,7 +68,7 @@ passport.use(new GoogleStrategy({
 
             userExist = await prisma.user.create({
                 data: {
-                    email: profile.email?.[0].value,
+                    email,
                     name: profile.displayName,
                     picture: profile.photos?.[0].value as string,
                     role: Role.OWNER,

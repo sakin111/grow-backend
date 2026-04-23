@@ -44,7 +44,14 @@ const login = CatchAsync(async (req: Request, res: Response, next: NextFunction)
 
 const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
 
+
+    let redirectTo = req.query.state? req.query.state as string : ""
+
+    if(redirectTo.startsWith("/")){
+        redirectTo = redirectTo.slice(1)
+    }
     const user = req.user as any;
+   
 
     if (!user) {
         return next(new AppError(401, "Authentication failed"))
@@ -56,12 +63,9 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
 
     setAuthCookie(res, userToken)
 
-    res.redirect(envVar.FRONTEND_URL)
-
-/**
- * todo: set the frontend url in env variable and redirect to that url with access token and refresh token in cookie
- */
-
+    const redirectUrl = `${envVar.FRONTEND_URL}/${redirectTo}`
+    console.log("Google login redirect to:", redirectUrl)
+    res.redirect(redirectUrl)
 })
 
 
