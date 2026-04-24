@@ -40,27 +40,40 @@ const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) =>
   return company;
 };
 
-const getAllCompanies = async () => {
-  const companies = await prisma.company.findMany({
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      discussions: {
-        select: {
-          id: true,
-          title: true,
-          topic: true,
-        },
-      },
-    },
-  });
+const getAllCompanies = async (page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
 
-  return companies;
+  const [companies, total] = await Promise.all([
+    prisma.company.findMany({
+      skip,
+      take: limit,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: { discussions: true, comments: true },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.company.count(),
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: companies,
+  };
 };
 
 const getSingleCompany = async (companyId: string) => {

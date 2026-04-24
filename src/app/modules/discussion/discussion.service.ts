@@ -39,33 +39,49 @@ const createDiscussion = async (userId: string, payload: ICreateDiscussionPayloa
   return discussion;
 };
 
-const getAllDiscussions = async (companyId?: string) => {
-  const whereClause = companyId ? { companyId, isDeleted: false } : { isDeleted: false };
+const getAllDiscussions = async (
+  page: number = 1,
+  limit: number = 10,
+  topic?: string,
+  companyId?: string
+) => {
+  const skip = (page - 1) * limit;
 
-  const discussions = await prisma.discussion.findMany({
-    where: whereClause,
-    include: {
-      company: {
-        select: {
-          id: true,
-          name: true,
+  const whereClause: any = { isDeleted: false };
+  if (companyId) whereClause.companyId = companyId;
+  if (topic) whereClause.topic = topic as any;
+
+  const [discussions, total] = await Promise.all([
+    prisma.discussion.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: { comments: { where: { isDeleted: false } } },
         },
       },
-      comments: {
-        where: { isDeleted: false },
-        select: {
-          id: true,
-          content: true,
-          createdAt: true,
-        },
+      orderBy: {
+        createdAt: "desc",
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+    }),
+    prisma.discussion.count({ where: whereClause }),
+  ]);
 
-  return discussions;
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: discussions,
+  };
 };
 
 const getSingleDiscussion = async (discussionId: string) => {
@@ -172,13 +188,26 @@ const deleteDiscussion = async (discussionId: string, userId: string) => {
   return deletedDiscussion;
 };
 
-const getDiscussionsByTopic = async (topic: string) => {
-  const discussions = await prisma.discussion.findMany({
-    where: {
-      topic: topic as any,
-      isDeleted: false,
-      isPublic: true,
-    },
+// Comment Services
+const createComment = async (userId: string, payload: any) => {
+  // Check if company exists and user has access to it
+  const company = await prisma.company.findUnique({
+    where: { id: payload.companyId },
+  });
+
+  if (!company) {
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
+  }
+
+  if (company.ownerId !== userId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not authorized to comment from this company"
+    );
+  }
+
+  const comment = await prisma.comment.create({
+    data: payload,
     include: {
       company: {
         select: {
@@ -186,21 +215,60 @@ const getDiscussionsByTopic = async (topic: string) => {
           name: true,
         },
       },
-      comments: {
-        where: { isDeleted: false },
-        select: {
-          id: true,
-          content: true,
-          createdAt: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
     },
   });
 
-  return discussions;
+  return comment;
+};
+
+const updateComment = async (commentId: string, userId: string, content: string) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId, isDeleted: false },
+    include: { company: true },
+  });
+
+  if (!comment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+
+  if (comment.company.ownerId !== userId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not authorized to update this comment"
+    );
+  }
+
+  const updatedComment = await prisma.comment.update({
+    where: { id: commentId },
+    data: { content, isEdited: true },
+  });
+
+  return updatedComment;
+};
+
+const deleteComment = async (commentId: string, userId: string) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId, isDeleted: false },
+    include: { company: true },
+  });
+
+  if (!comment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+
+  if (comment.company.ownerId !== userId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not authorized to delete this comment"
+    );
+  }
+
+  const deletedComment = await prisma.comment.update({
+    where: { id: commentId },
+    data: { isDeleted: true },
+  });
+
+  return deletedComment;
 };
 
 export const DiscussionServices = {
@@ -209,5 +277,7 @@ export const DiscussionServices = {
   getSingleDiscussion,
   updateDiscussion,
   deleteDiscussion,
-  getDiscussionsByTopic,
-};
+  createComment,
+  updateComment,
+  deleteComment,
+};
