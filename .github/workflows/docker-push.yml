@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - company
 
 jobs:
   build-and-push:
