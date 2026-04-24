@@ -3,14 +3,19 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-COPY prisma ./prisma/
-RUN npm install
-
-# Copy source code and build
+# Copy all source files first
 COPY . .
-RUN npx prisma generate --schema=./prisma/schema/schema.prisma
+
+# Create a dummy .env so prisma.config.ts can load without errors
+RUN touch .env
+
+# Install dependencies (skip postinstall to avoid premature prisma generate)
+RUN npm install --ignore-scripts
+
+# Generate Prisma client using the directory (reads all .prisma files)
+RUN npx prisma generate --schema=./prisma/schema
+
+# Build TypeScript
 RUN npm run build
 
 # Stage 2: Production
