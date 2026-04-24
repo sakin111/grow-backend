@@ -10,7 +10,7 @@ RUN npm install
 
 # Copy source code and build
 COPY . .
-RUN npx prisma generate --schema=./prisma/schema
+RUN npx prisma generate --schema=./prisma/schema/schema.prisma
 RUN npm run build
 
 # Stage 2: Production
