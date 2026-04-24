@@ -23,6 +23,10 @@ model User {
   auths            Auth[]
 
   company          Company?
+  mentorProfile    MentorProfile?
+
+  bookings         SessionBooking[]
+  reviews          Review[]
 
   emailVerified    Boolean  @default(false)
   emailVerifiedAt  DateTime?

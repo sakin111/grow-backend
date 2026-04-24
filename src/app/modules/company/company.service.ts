@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import { ICreateCompanyPayload, IUpdateCompanyPayload } from "./company.interface";
+import { QueryBuilder } from "../../shared/QueryBuilder";
 
 const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) => {
   // Check if user already has a company
@@ -40,9 +41,11 @@ const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) =>
   return company;
 };
 
-const getAllCompanies = async () => {
-  const companies = await prisma.company.findMany({
-    include: {
+const getAllCompanies = async (query: Record<string, any>) => {
+  const companyQuery = new QueryBuilder(prisma.company, query)
+    .search(["name", "description"])
+    .filter()
+    .relation({
       owner: {
         select: {
           id: true,
@@ -50,17 +53,21 @@ const getAllCompanies = async () => {
           email: true,
         },
       },
-      discussions: {
-        select: {
-          id: true,
-          title: true,
-          topic: true,
-        },
+      _count: {
+        select: { discussions: true, comments: true },
       },
-    },
-  });
+    })
+    .sort("-createdAt")
+    .paginate()
+    .fields();
 
-  return companies;
+  const data = await companyQuery.build();
+  const meta = await companyQuery.getMeta();
+
+  return {
+    meta,
+    data,
+  };
 };
 
 const getSingleCompany = async (companyId: string) => {

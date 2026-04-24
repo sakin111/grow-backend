@@ -31,3 +31,13 @@ export interface IJwtPayload {
   email: string;
   role: string;
 }
+
+export interface ICreateCommentPayload {
+  content: string;
+  discussionId: string;
+  companyId: string;
+}
+
+export interface IUpdateCommentPayload {
+  content: string;
+}

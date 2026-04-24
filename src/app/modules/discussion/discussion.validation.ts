@@ -20,7 +20,23 @@ const updateDiscussionValidationSchema = z.object({
   }),
 });
 
+const createCommentValidationSchema = z.object({
+  body: z.object({
+    content: z.string().min(1, "Content is required").max(1000, "Content must be less than 1000 characters"),
+    discussionId: z.string().uuid("Invalid discussion ID"),
+    companyId: z.string().uuid("Invalid company ID"),
+  }),
+});
+
+const updateCommentValidationSchema = z.object({
+  body: z.object({
+    content: z.string().min(1, "Content is required").max(1000, "Content must be less than 1000 characters"),
+  }),
+});
+
 export const DiscussionValidations = {
   createDiscussionValidationSchema,
   updateDiscussionValidationSchema,
+  createCommentValidationSchema,
+  updateCommentValidationSchema,
 };

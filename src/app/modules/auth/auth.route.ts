@@ -5,34 +5,14 @@ import { envVar } from "../../config/envVar";
 
 const router = Router()
 
-router.post("/login", authController.login )
+router.post("/login", authController.login)
 
 router.get("/google", (req: Request, res: Response, next: NextFunction) => {
-     const redirect = req.query.redirect as string || "/"
+    const redirect = req.query.redirect as string || "/"
     passport.authenticate("google", { scope: ["email", "profile"], state: redirect })(req, res, next)
 })
 
-router.get("/google/callback", (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("google", (err: any, user: any, info: any) => {
-        if (err) {
-            console.error("Google auth callback error:", err)
-            return res.redirect(`${envVar.FRONTEND_URL}/login?error=${encodeURIComponent("Google authentication error")}`)
-        }
+router.get("/google/callback", passport.authenticate("google", { failureRedirect: `${envVar.FRONTEND_URL}/login?error=There is some issues with your account. Please contact with out support team!` }), authController.GoogleLogin)
 
-        if (!user) {
-            console.error("Google auth callback failed:", info)
-            const message = typeof info?.message === "string" ? info.message : "Google authentication failed"
-            return res.redirect(`${envVar.FRONTEND_URL}/login?error=${encodeURIComponent(message)}`)
-        }
-
-        req.logIn(user, (loginErr: any) => {
-            if (loginErr) {
-                console.error("Google login session error:", loginErr)
-                return res.redirect(`${envVar.FRONTEND_URL}/login?error=${encodeURIComponent("Login session error")}`)
-            }
-            authController.GoogleLogin(req, res, next)
-        })
-    })(req, res, next)
-})
 
 export const authRouter = router

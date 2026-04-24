@@ -18,74 +18,107 @@ const createDiscussion = CatchAsync(async (req: Request, res: Response, next: Ne
     })
 })
 
-const getAllDiscussions = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { companyId } = req.query;
-    const discussions = await DiscussionServices.getAllDiscussions(companyId as string)
+const getAllDiscussions = CatchAsync(async (req: Request, res: Response) => {
+  const result = await DiscussionServices.getAllDiscussions(req.query);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Discussions Retrieved Successfully",
-        data: discussions,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Discussions Retrieved Successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
 
-const getSingleDiscussion = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const discussion = await DiscussionServices.getSingleDiscussion(id as string)
+const getSingleDiscussion = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const discussion = await DiscussionServices.getSingleDiscussion(id as string);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Discussion Retrieved Successfully",
-        data: discussion,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Discussion Retrieved Successfully",
+    data: discussion,
+  });
+});
 
-const updateDiscussion = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const userId = (req.user as IJwtPayload)?.id;
-    const discussion = await DiscussionServices.updateDiscussion(id as string, userId, req.body)
+const updateDiscussion = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req.user as IJwtPayload)?.id;
+  const discussion = await DiscussionServices.updateDiscussion(
+    id as string,
+    userId,
+    req.body
+  );
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Discussion Updated Successfully",
-        data: discussion,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Discussion Updated Successfully",
+    data: discussion,
+  });
+});
 
-const deleteDiscussion = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const userId = (req.user as IJwtPayload)?.id;
-    const discussion = await DiscussionServices.deleteDiscussion(id as string, userId)
+const deleteDiscussion = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req.user as IJwtPayload)?.id;
+  const discussion = await DiscussionServices.deleteDiscussion(id as string, userId);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Discussion Deleted Successfully",
-        data: discussion,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Discussion Deleted Successfully",
+    data: discussion,
+  });
+});
 
-const getDiscussionsByTopic = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { topic } = req.params;
-    const discussions = await DiscussionServices.getDiscussionsByTopic(topic as string)
+// Comment Controllers
+const createComment = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as IJwtPayload)?.id;
+  const comment = await DiscussionServices.createComment(userId, req.body);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Discussions Retrieved Successfully",
-        data: discussions,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Comment Created Successfully",
+    data: comment,
+  });
+});
 
+const updateComment = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req.user as IJwtPayload)?.id;
+  const { content } = req.body;
+  const comment = await DiscussionServices.updateComment(id as string, userId, content);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Comment Updated Successfully",
+    data: comment,
+  });
+});
+
+const deleteComment = CatchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req.user as IJwtPayload)?.id;
+  const comment = await DiscussionServices.deleteComment(id as string, userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Comment Deleted Successfully",
+    data: comment,
+  });
+});
 
 export const DiscussionControllers = {
-    createDiscussion,
-    getAllDiscussions,
-    getSingleDiscussion,
-    updateDiscussion,
-    deleteDiscussion,
-    getDiscussionsByTopic,
-}
+  createDiscussion,
+  getAllDiscussions,
+  getSingleDiscussion,
+  updateDiscussion,
+  deleteDiscussion,
+  createComment,
+  updateComment,
+  deleteComment,
+};

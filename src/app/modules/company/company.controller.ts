@@ -18,16 +18,17 @@ const createCompany = CatchAsync(async (req: Request, res: Response, next: NextF
     })
 })
 
-const getAllCompanies = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const companies = await CompanyServices.getAllCompanies()
+const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
+  const result = await CompanyServices.getAllCompanies(req.query);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Companies Retrieved Successfully",
-        data: companies,
-    })
-})
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Companies Retrieved Successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
 
 const getSingleCompany = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
