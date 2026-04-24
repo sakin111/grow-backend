@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import { ICreateDiscussionPayload, IUpdateDiscussionPayload } from "./discussion.interface";
+import { QueryBuilder } from "../../shared/QueryBuilder";
 
 const createDiscussion = async (userId: string, payload: ICreateDiscussionPayload) => {
   // Check if company exists and user has access to it
@@ -39,48 +40,39 @@ const createDiscussion = async (userId: string, payload: ICreateDiscussionPayloa
   return discussion;
 };
 
-const getAllDiscussions = async (
-  page: number = 1,
-  limit: number = 10,
-  topic?: string,
-  companyId?: string
-) => {
-  const skip = (page - 1) * limit;
-
-  const whereClause: any = { isDeleted: false };
-  if (companyId) whereClause.companyId = companyId;
-  if (topic) whereClause.topic = topic as any;
-
-  const [discussions, total] = await Promise.all([
-    prisma.discussion.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        _count: {
-          select: { comments: { where: { isDeleted: false } } },
+const getAllDiscussions = async (query: Record<string, any>) => {
+  const discussionQuery = new QueryBuilder(prisma.discussion, query)
+    .search(["title", "content"])
+    .filter(["companyId", "topic"])
+    .addWhere({ isDeleted: false })
+    .relation({
+      company: {
+        select: {
+          id: true,
+          name: true,
         },
       },
-      orderBy: {
-        createdAt: "desc",
+      _count: {
+        select: { comments: { where: { isDeleted: false } } },
       },
-    }),
-    prisma.discussion.count({ where: whereClause }),
-  ]);
+    })
+    .sort("-createdAt")
+    .paginate()
+    .fields();
+
+  if (query.companyId) {
+    discussionQuery.addWhere({ companyId: query.companyId });
+  }
+  if (query.topic) {
+    discussionQuery.addWhere({ topic: query.topic });
+  }
+
+  const data = await discussionQuery.build();
+  const meta = await discussionQuery.getMeta();
 
   return {
-    meta: {
-      page,
-      limit,
-      total,
-    },
-    data: discussions,
+    meta,
+    data,
   };
 };
 

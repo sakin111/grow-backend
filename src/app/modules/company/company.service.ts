@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import { ICreateCompanyPayload, IUpdateCompanyPayload } from "./company.interface";
+import { QueryBuilder } from "../../shared/QueryBuilder";
 
 const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) => {
   // Check if user already has a company
@@ -40,39 +41,32 @@ const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) =>
   return company;
 };
 
-const getAllCompanies = async (page: number = 1, limit: number = 10) => {
-  const skip = (page - 1) * limit;
+const getAllCompanies = async (query: Record<string, any>) => {
+  const companyQuery = new QueryBuilder(prisma.company, query)
+    .search(["name", "description"])
+    .filter()
+    .relation({
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: { discussions: true, comments: true },
+      },
+    })
+    .sort("-createdAt")
+    .paginate()
+    .fields();
 
-  const [companies, total] = await Promise.all([
-    prisma.company.findMany({
-      skip,
-      take: limit,
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: { discussions: true, comments: true },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-    prisma.company.count(),
-  ]);
+  const data = await companyQuery.build();
+  const meta = await companyQuery.getMeta();
 
   return {
-    meta: {
-      page,
-      limit,
-      total,
-    },
-    data: companies,
+    meta,
+    data,
   };
 };
 

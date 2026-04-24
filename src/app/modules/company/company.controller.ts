@@ -19,9 +19,7 @@ const createCompany = CatchAsync(async (req: Request, res: Response, next: NextF
 })
 
 const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const result = await CompanyServices.getAllCompanies(page, limit);
+  const result = await CompanyServices.getAllCompanies(req.query);
 
   sendResponse(res, {
     success: true,

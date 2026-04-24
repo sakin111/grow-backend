@@ -19,16 +19,7 @@ const createDiscussion = CatchAsync(async (req: Request, res: Response, next: Ne
 })
 
 const getAllDiscussions = CatchAsync(async (req: Request, res: Response) => {
-  const { companyId, topic } = req.query;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-
-  const result = await DiscussionServices.getAllDiscussions(
-    page,
-    limit,
-    topic as string,
-    companyId as string
-  );
+  const result = await DiscussionServices.getAllDiscussions(req.query);
 
   sendResponse(res, {
     success: true,
@@ -98,7 +89,7 @@ const updateComment = CatchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = (req.user as IJwtPayload)?.id;
   const { content } = req.body;
-  const comment = await DiscussionServices.updateComment(id, userId, content);
+  const comment = await DiscussionServices.updateComment(id as string, userId, content);
 
   sendResponse(res, {
     success: true,
@@ -111,7 +102,7 @@ const updateComment = CatchAsync(async (req: Request, res: Response) => {
 const deleteComment = CatchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = (req.user as IJwtPayload)?.id;
-  const comment = await DiscussionServices.deleteComment(id, userId);
+  const comment = await DiscussionServices.deleteComment(id as string, userId);
 
   sendResponse(res, {
     success: true,

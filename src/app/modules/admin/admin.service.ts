@@ -2,35 +2,22 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import { UserStatus, VerificationStatus } from "@prisma/client";
+import { QueryBuilder } from "../../shared/QueryBuilder";
 
-const getAllUsers = async (page: number = 1, limit: number = 10) => {
-  const skip = (page - 1) * limit;
+const getAllUsers = async (query: Record<string, any>) => {
+  const userQuery = new QueryBuilder(prisma.user, query)
+    .search(["name", "email"])
+    .filter()
+    .sort("-createdAt")
+    .paginate()
+    .fields();
 
-  const users = await prisma.user.findMany({
-    skip,
-    take: limit,
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      createdAt: true,
-    },
-  });
-
-  const total = await prisma.user.count();
+  const data = await userQuery.build();
+  const meta = await userQuery.getMeta();
 
   return {
-    meta: {
-      page,
-      limit,
-      total,
-    },
-    data: users,
+    meta,
+    data,
   };
 };
 
@@ -56,10 +43,11 @@ const updateUserStatus = async (userId: string, status: UserStatus) => {
   return updatedUser;
 };
 
-const getAllCompanies = async (status?: VerificationStatus) => {
-  const companies = await prisma.company.findMany({
-    where: status ? { verificationStatus: status } : {},
-    include: {
+const getAllCompanies = async (query: Record<string, any>) => {
+  const companyQuery = new QueryBuilder(prisma.company, query)
+    .search(["name", "description"])
+    .filter()
+    .relation({
       owner: {
         select: {
           id: true,
@@ -67,13 +55,18 @@ const getAllCompanies = async (status?: VerificationStatus) => {
           email: true,
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+    })
+    .sort("-createdAt")
+    .paginate()
+    .fields();
 
-  return companies;
+  const data = await companyQuery.build();
+  const meta = await companyQuery.getMeta();
+
+  return {
+    meta,
+    data,
+  };
 };
 
 const verifyCompany = async (companyId: string, status: VerificationStatus) => {

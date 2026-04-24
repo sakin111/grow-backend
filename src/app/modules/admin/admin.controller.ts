@@ -6,9 +6,7 @@ import { AdminServices } from "./admin.service";
 import { VerificationStatus } from "@prisma/client";
 
 const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const result = await AdminServices.getAllUsers(page, limit);
+  const result = await AdminServices.getAllUsers(req.query);
 
   sendResponse(res, {
     success: true,
@@ -20,7 +18,7 @@ const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const updateUserStatus = CatchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const { userId } = req.params as any;
   const { status } = req.body;
   const result = await AdminServices.updateUserStatus(userId, status);
 
@@ -33,19 +31,19 @@ const updateUserStatus = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
-  const status = req.query.status as VerificationStatus;
-  const result = await AdminServices.getAllCompanies(status);
+  const result = await AdminServices.getAllCompanies(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Companies retrieved successfully",
-    data: result,
+    meta: result.meta,
+    data: result.data,
   });
 });
 
 const verifyCompany = CatchAsync(async (req: Request, res: Response) => {
-  const { companyId } = req.params;
+  const { companyId } = req.params as any;
   const { status } = req.body;
   const result = await AdminServices.verifyCompany(companyId, status);
 
