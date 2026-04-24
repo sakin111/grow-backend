@@ -1,0 +1,49 @@
+model SessionBooking {
+  id          String        @id @default(uuid())
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
+  mentorId    String
+  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
+  status      BookingStatus @default(PENDING)
+  startTime   DateTime
+  endTime     DateTime
+  bookingDate DateTime      @default(now())
+
+  videoSession VideoSession?
+  review       Review?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("session_booking")
+}
+
+model VideoSession {
+  id          String        @id @default(uuid())
+  bookingId   String        @unique
+  booking     SessionBooking @relation(fields: [bookingId], references: [id])
+  meetingLink String
+  status      SessionStatus @default(SCHEDULED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("video_session")
+}
+
+model Review {
+  id        String         @id @default(uuid())
+  ownerId   String
+  owner     User           @relation(fields: [ownerId], references: [id])
+  mentorId  String
+  mentor    MentorProfile  @relation(fields: [mentorId], references: [id])
+  bookingId String         @unique
+  booking   SessionBooking @relation(fields: [bookingId], references: [id])
+  rating    Float
+  comment   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("review")
+}
