@@ -3,13 +3,13 @@ import { UserStatus, VerificationStatus } from "@prisma/client";
 
 const updateUserStatusValidationSchema = z.object({
   body: z.object({
-    status: z.nativeEnum(UserStatus),
+    status: z.enum(UserStatus),
   }),
 });
 
 const verifyCompanyValidationSchema = z.object({
   body: z.object({
-    status: z.nativeEnum(VerificationStatus),
+    status: z.enum(VerificationStatus),
   }),
 });
 

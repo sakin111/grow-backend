@@ -3,9 +3,12 @@ import { authController } from "./auth.controller";
 import passport from "passport";
 import { envVar } from "../../config/envVar";
 
+
 const router = Router()
 
 router.post("/login", authController.login)
+router.post("/logout", authController.logout)
+router.post("/refresh-token", authController.getAccessToken)
 
 router.get("/google", (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect as string || "/"
