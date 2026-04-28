@@ -2,6 +2,8 @@ import { NextFunction, Request, Response, Router } from "express";
 import { authController } from "./auth.controller";
 import passport from "passport";
 import { envVar } from "../../config/envVar";
+import { checkAuth } from "../../middleware/checkAuth";
+import { Role } from "@prisma/client";
 
 
 const router = Router()
@@ -9,6 +11,9 @@ const router = Router()
 router.post("/login", authController.login)
 router.post("/logout", authController.logout)
 router.post("/refresh-token", authController.getAccessToken)
+router.post("/change-password", checkAuth(...Object.values(Role)), authController.changePassword)
+router.post("/set-password", checkAuth(...Object.values(Role)), authController.setPassword)
+router.post("/forgot-password", authController.forgotPassword)
 
 router.get("/google", (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect as string || "/"
