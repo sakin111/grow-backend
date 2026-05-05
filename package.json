@@ -25,6 +25,7 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.61.4",
     "@prisma/client": "^6.18.0",
+    "@socket.io/redis-adapter": "^8.3.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.6",
@@ -32,8 +33,10 @@
     "@types/nodemailer": "^8.0.0",
     "@types/passport-google-oauth2": "^0.1.10",
     "@types/passport-local": "^1.0.38",
+    "@types/socket.io": "^3.0.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "connect-redis": "^9.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "ejs": "^5.0.2",
@@ -47,6 +50,8 @@
     "passport-local": "^1.0.0",
     "pg": "^8.18.0",
     "prisma": "^6.18.0",
+    "redis": "^5.12.1",
+    "socket.io": "^4.8.3",
     "zod": "^4.3.6"
   }
 }
