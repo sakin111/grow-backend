@@ -3,6 +3,7 @@ import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import { ICreateDiscussionPayload, IUpdateDiscussionPayload } from "./discussion.interface";
 import { QueryBuilder } from "../../shared/QueryBuilder";
+import { sendInAppNotification } from "../notification/notification.utils";
 
 const createDiscussion = async (userId: string, payload: ICreateDiscussionPayload) => {
   // Check if company exists and user has access to it
@@ -207,8 +208,24 @@ const createComment = async (userId: string, payload: any) => {
           name: true,
         },
       },
+      discussion: {
+        include: {
+          company: true
+        }
+      }
     },
   });
+
+  // Notify discussion owner
+  if (comment.discussion.company.ownerId !== userId) {
+    await sendInAppNotification({
+      userId: comment.discussion.company.ownerId,
+      type: "NEW_COMMENT",
+      title: "New Comment on Discussion",
+      message: `A new comment was added to your discussion: ${comment.discussion.title}`,
+      data: { discussionId: comment.discussionId, commentId: comment.id }
+    });
+  }
 
   return comment;
 };

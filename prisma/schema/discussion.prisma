@@ -1,6 +1,4 @@
 
-
-
 model Discussion {
   id        String   @id @default(uuid())
   title     String
@@ -11,6 +9,7 @@ model Discussion {
   company   Company  @relation(fields: [companyId], references: [id])
 
   comments  Comment[]
+  chatMessages ChatMessage[]
 
   isPublic Boolean @default(true)
   isDeleted Boolean @default(false)
