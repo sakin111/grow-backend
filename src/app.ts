@@ -8,12 +8,20 @@ import { envVar } from './app/config/envVar'
 import { globalErrorHandler } from './app/error/GlobalErrorHandler'
 import notFound from './app/error/notFound'
 import cookieParser from 'cookie-parser'
+import { RedisStore } from "connect-redis"
+import { redisClient } from './app/lib/redis'
 
 export const app: Application = express()
 
 
-// utils
+// session
+const redisStore = new RedisStore({
+   client: redisClient,
+   prefix: "grow:",
+})
+
 app.use(expressSession({
+   store: redisStore,
    secret: envVar.EXPRESS_SESSION_SECRET,
    resave: false,
    saveUninitialized: false
@@ -35,7 +43,5 @@ app.get("/", (req: Request, res: Response) => {
 
 
 
-// global error handler
 app.use(globalErrorHandler)
-// not found
 app.use(notFound)

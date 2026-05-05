@@ -3,6 +3,7 @@ import { prisma } from "./app/lib/prisma";
 import { app } from "./app";
 import { seedAdmin } from "./app/shared/seedAdmin";
 import { setupSocket, setIoInstance } from "./app/lib/socket";
+import { connectRedis } from "./app/lib/redis";
 
 
 let server: Server
@@ -11,6 +12,7 @@ export async function StartServer() {
     try {
         await prisma.$connect()
         console.log("Database connected successfully")
+        await connectRedis()
         const httpServer = new Server(app);
         const io = setupSocket(httpServer);
         setIoInstance(io);

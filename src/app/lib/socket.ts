@@ -4,8 +4,21 @@ import { Server, Socket } from "socket.io";
 import { verifyToken } from "../shared/jwt";
 import { envVar } from "../config/envVar";
 import { prisma } from "./prisma";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { pubClient, subClient } from "./redis";
 
-export const onlineUsers = new Map<string, string>();
+// Use Redis for online status instead of in-memory Map
+export const getOnlineUser = async (userId: string) => {
+  return await pubClient.get(`online_user:${userId}`);
+};
+
+export const setOnlineUser = async (userId: string, socketId: string) => {
+  await pubClient.set(`online_user:${userId}`, socketId);
+};
+
+export const removeOnlineUser = async (userId: string) => {
+  await pubClient.del(`online_user:${userId}`);
+};
 
 export const setupSocket = (server: HttpServer) => {
   const io = new Server(server, {
@@ -14,6 +27,7 @@ export const setupSocket = (server: HttpServer) => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    adapter: createAdapter(pubClient, subClient),
   });
 
   io.use(async (socket: Socket, next) => {
@@ -41,8 +55,8 @@ export const setupSocket = (server: HttpServer) => {
 
     console.log(`User connected: ${userId} (${socket.id})`);
 
-    // Track online presence
-    onlineUsers.set(userId, socket.id);
+    // Track online presence in Redis
+    setOnlineUser(userId, socket.id);
     io.emit("online_status", { userId, status: "online" });
 
     // Join personal room
@@ -79,8 +93,8 @@ export const setupSocket = (server: HttpServer) => {
       }
     });
 
-    socket.on("disconnect", () => {
-      onlineUsers.delete(userId);
+    socket.on("disconnect", async () => {
+      await removeOnlineUser(userId);
       io.emit("online_status", { userId, status: "offline" });
       console.log(`User disconnected: ${userId}`);
     });
