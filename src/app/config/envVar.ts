@@ -17,12 +17,17 @@ export interface EnvType {
     BCRYPT_SALT_ROUND: string
     FRONTEND_URL: string
     NODE_ENV: string
+    EMAIL_HOST: string
+    EMAIL_PORT: number
+    EMAIL_USER: string
+    EMAIL_PASS: string
+    EMAIL_FROM: string
 }
 
 
 
 export const envProvider = (): EnvType => {
-    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV"]
+    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"]
     configKey.forEach((key) => {
         if (!process.env[key]) {
             throw new Error(`Missing environment variable: ${key}`)
@@ -44,7 +49,13 @@ export const envProvider = (): EnvType => {
         SUPER_ADMIN: process.env.SUPER_ADMIN as string,
         BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
         FRONTEND_URL: process.env.FRONTEND_URL as string,
-        NODE_ENV: process.env.NODE_ENV as string
+        NODE_ENV: process.env.NODE_ENV as string,
+        EMAIL_HOST: process.env.SMTP_HOST as string,
+        EMAIL_PORT: Number(process.env.SMTP_PORT),
+        EMAIL_USER: process.env.SMTP_USER as string,
+        EMAIL_PASS: process.env.SMTP_PASS as string,
+        EMAIL_FROM: process.env.SMTP_FROM as string,
+
 
     }
 }
