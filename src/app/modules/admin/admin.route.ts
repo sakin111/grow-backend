@@ -13,13 +13,6 @@ router.get(
   AdminControllers.getAllUsers
 );
 
-router.patch(
-  "/users/:userId/status",
-  checkAuth(Role.ADMIN),
-  validateRequest(AdminValidations.updateUserStatusValidationSchema),
-  AdminControllers.updateUserStatus
-);
-
 router.get(
   "/companies",
   checkAuth(Role.ADMIN),
@@ -33,4 +26,10 @@ router.patch(
   AdminControllers.verifyCompany
 );
 
+router.patch(
+  "/users/:userId/status",
+  checkAuth(Role.ADMIN),
+  validateRequest(AdminValidations.updateUserStatusValidationSchema),
+  AdminControllers.updateUserStatus
+);
 export const adminRouter = router;
