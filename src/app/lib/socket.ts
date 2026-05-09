@@ -93,6 +93,34 @@ export const setupSocket = (server: HttpServer) => {
       }
     });
 
+    // --- WebRTC Signaling ---
+    
+    // Join a video session room
+    socket.on("join_video_session", (bookingId: string) => {
+      socket.join(`video_${bookingId}`);
+      console.log(`User ${userId} joined video session for booking ${bookingId}`);
+      
+      // Notify others in the room that a new peer joined
+      socket.to(`video_${bookingId}`).emit("peer_joined", { userId });
+    });
+
+    // Relay signaling data (offer, answer, ICE candidates)
+    socket.on("webrtc_signal", (data: { targetId: string; signal: any; bookingId: string }) => {
+      console.log(`Relaying WebRTC signal from ${userId} to ${data.targetId}`);
+      io.to(`user_${data.targetId}`).emit("webrtc_signal", {
+        senderId: userId,
+        signal: data.signal,
+        bookingId: data.bookingId
+      });
+    });
+
+    // Handle leaving video session
+    socket.on("leave_video_session", (bookingId: string) => {
+      socket.leave(`video_${bookingId}`);
+      console.log(`User ${userId} left video session for booking ${bookingId}`);
+      socket.to(`video_${bookingId}`).emit("peer_left", { userId });
+    });
+
     socket.on("disconnect", async () => {
       await removeOnlineUser(userId);
       io.emit("online_status", { userId, status: "offline" });

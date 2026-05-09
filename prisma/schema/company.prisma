@@ -16,6 +16,9 @@ model Company {
 
     discussions Discussion[]
     comments    Comment[] 
+    posts       Post[]
+    followers   Follow[] @relation("Following")
+    following   Follow[] @relation("Follower")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

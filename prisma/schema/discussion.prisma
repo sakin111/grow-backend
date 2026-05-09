@@ -10,6 +10,9 @@ model Discussion {
 
   comments  Comment[]
   chatMessages ChatMessage[]
+  likes     Like[]
+  saves     Save[]
+  shares    Share[]
 
   isPublic Boolean @default(true)
   isDeleted Boolean @default(false)
