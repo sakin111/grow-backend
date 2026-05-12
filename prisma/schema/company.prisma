@@ -7,6 +7,8 @@ model Company {
     size String 
     stage String
     description String
+    logo        String?
+
 
     ownerId String @unique
     owner User @relation(fields: [ownerId], references: [id])
@@ -16,6 +18,9 @@ model Company {
 
     discussions Discussion[]
     comments    Comment[] 
+    posts       Post[]
+    followers   Follow[] @relation("Following")
+    following   Follow[] @relation("Follower")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

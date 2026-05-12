@@ -149,9 +149,36 @@ const resetPassword = async (payload: Record<string, any>, decodedToken: JwtPayl
     return null;
 }
 
+const verifyEmail = async (email: string, token: string) => {
+    const verificationToken = await prisma.verificationToken.findUnique({
+        where: { token }
+    });
+
+    if (!verificationToken || verificationToken.email !== email) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Invalid token");
+    }
+
+    if (new Date() > verificationToken.expires) {
+        await prisma.verificationToken.delete({ where: { id: verificationToken.id } });
+        throw new AppError(httpStatus.BAD_REQUEST, "Token expired");
+    }
+
+    await prisma.$transaction([
+        prisma.user.update({
+            where: { email },
+            data: { emailVerified: true, emailVerifiedAt: new Date() }
+        }),
+        prisma.verificationToken.delete({ where: { id: verificationToken.id } })
+    ]);
+
+    return { message: "Email verified successfully" };
+};
+
 export const AuthServices = {
     changePassword,
     setPassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    verifyEmail
 };
+

@@ -1,0 +1,85 @@
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  image     String?
+  topic     Topic
+  
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  likes     Like[]
+  saves     Save[]
+  shares    Share[]
+
+  isDeleted Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("post")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  
+  discussionId String?
+  discussion   Discussion? @relation(fields: [discussionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@unique([userId, discussionId])
+  @@map("like")
+}
+
+model Save {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  
+  discussionId String?
+  discussion   Discussion? @relation(fields: [discussionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@unique([userId, discussionId])
+  @@map("save")
+}
+
+model Share {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  
+  discussionId String?
+  discussion   Discussion? @relation(fields: [discussionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("share")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    Company  @relation("Follower", fields: [followerId], references: [id])
+  
+  followingId String
+  following   Company  @relation("Following", fields: [followingId], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@map("follow")
+}

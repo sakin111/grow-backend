@@ -167,6 +167,19 @@ const logout = CatchAsync(async (req: Request, res: Response, next: NextFunction
 
 
 
+const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
+    const { email, token } = req.query;
+
+    const result = await AuthServices.verifyEmail(email as string, token as string);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    });
+});
+
 export const authController = {
     login,
     GoogleLogin,
@@ -175,5 +188,6 @@ export const authController = {
     changePassword,
     setPassword,
     forgotPassword,
-    resetPassword
-}
+    resetPassword,
+    verifyEmail
+};
