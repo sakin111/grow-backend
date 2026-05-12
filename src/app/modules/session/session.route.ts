@@ -57,4 +57,23 @@ router.patch(
     SessionControllers.completeBooking
 );
 
+router.post(
+    "/:id/start",
+    checkAuth(Role.MENTOR),
+    SessionControllers.startSession
+);
+
+router.get(
+    "/:id/join",
+    checkAuth(Role.OWNER, Role.MENTOR),
+    SessionControllers.joinSession
+);
+
+router.post(
+    "/:id/end",
+    checkAuth(Role.MENTOR),
+    SessionControllers.endSession
+);
+
+
 export const sessionRouter = router;

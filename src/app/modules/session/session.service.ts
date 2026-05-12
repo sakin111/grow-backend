@@ -1,9 +1,11 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
-import { BookingStatus } from "@prisma/client";
+import { BookingStatus, SessionStatus } from "@prisma/client";
 import { ICreateBooking } from "./session.interface";
 import { sendInAppNotification } from "../notification/notification.utils";
+import { AccessToken } from "livekit-server-sdk";
+import { envVar } from "../../config/envVar";
 
 
 
@@ -428,6 +430,110 @@ const getAllBookings = async (query: Record<string, any>) => {
     };
 };
 
+const startSession = async (mentorUserId: string, bookingId: string) => {
+    const booking = await prisma.sessionBooking.findUnique({
+        where: { id: bookingId },
+        include: { mentor: { include: { user: true } }, videoSession: true },
+    });
+
+    if (!booking) {
+        throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+    }
+
+    if (booking.mentor.userId !== mentorUserId) {
+        throw new AppError(httpStatus.FORBIDDEN, "Only the mentor can start this session");
+    }
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Only confirmed bookings can be started");
+    }
+
+    // Generate LiveKit token for mentor (host)
+    const at = new AccessToken(envVar.LIVEKIT_API_KEY, envVar.LIVEKIT_API_SECRET, {
+        identity: mentorUserId,
+        name: booking.mentor.user.name,
+    });
+    at.addGrant({ roomJoin: true, room: bookingId, canPublish: true, canSubscribe: true });
+    const token = await at.toJwt();
+
+    // Create or update video session
+    if (!booking.videoSession) {
+        await prisma.videoSession.create({
+            data: {
+                bookingId: bookingId,
+                meetingLink: `${envVar.FRONTEND_URL}/session/${bookingId}`,
+                status: SessionStatus.ONGOING,
+            }
+        });
+    } else {
+        await prisma.videoSession.update({
+            where: { bookingId: bookingId },
+            data: { status: SessionStatus.ONGOING }
+        });
+    }
+
+    return { token, serverUrl: envVar.LIVEKIT_HOST };
+};
+
+const joinSession = async (userId: string, bookingId: string) => {
+    const booking = await prisma.sessionBooking.findUnique({
+        where: { id: bookingId },
+        include: { owner: true, mentor: { include: { user: true } }, videoSession: true },
+    });
+
+    if (!booking) {
+        throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+    }
+
+    if (booking.ownerId !== userId && booking.mentor.userId !== userId) {
+        throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to join this session");
+    }
+
+    if (!booking.videoSession || booking.videoSession.status !== SessionStatus.ONGOING) {
+        throw new AppError(httpStatus.BAD_REQUEST, "The session has not started yet or has already ended");
+    }
+
+    const user = booking.ownerId === userId ? booking.owner : booking.mentor.user;
+
+    // Generate LiveKit token for participant (subscriber)
+    const at = new AccessToken(envVar.LIVEKIT_API_KEY, envVar.LIVEKIT_API_SECRET, {
+        identity: userId,
+        name: user.name,
+    });
+    at.addGrant({ roomJoin: true, room: bookingId, canPublish: false, canSubscribe: true });
+    const token = await at.toJwt();
+
+    return { token, serverUrl: envVar.LIVEKIT_HOST };
+};
+
+const endSession = async (mentorUserId: string, bookingId: string) => {
+    const booking = await prisma.sessionBooking.findUnique({
+        where: { id: bookingId },
+        include: { mentor: true, videoSession: true },
+    });
+
+    if (!booking) {
+        throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+    }
+
+    if (booking.mentor.userId !== mentorUserId) {
+        throw new AppError(httpStatus.FORBIDDEN, "Only the mentor can end this session");
+    }
+
+    await prisma.$transaction([
+        prisma.videoSession.update({
+            where: { bookingId: bookingId },
+            data: { status: SessionStatus.COMPLETED }
+        }),
+        prisma.sessionBooking.update({
+            where: { id: bookingId },
+            data: { status: BookingStatus.COMPLETED }
+        })
+    ]);
+
+    return { message: "Session ended successfully" };
+};
+
 export const SessionServices = {
     createBooking,
     confirmBooking,
@@ -436,4 +542,8 @@ export const SessionServices = {
     getMyBookings,
     getSingleBooking,
     getAllBookings,
+    startSession,
+    joinSession,
+    endSession,
 };
+

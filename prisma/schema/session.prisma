@@ -24,6 +24,11 @@ model VideoSession {
   booking     SessionBooking @relation(fields: [bookingId], references: [id])
   meetingLink String
   status      SessionStatus @default(SCHEDULED)
+  mentorId    String
+  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

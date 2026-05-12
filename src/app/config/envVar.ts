@@ -26,12 +26,15 @@ export interface EnvType {
     CLOUDINARY_CLOUD_NAME: string
     CLOUDINARY_API_KEY: string
     CLOUDINARY_API_SECRET: string
+    LIVEKIT_HOST: string
+    LIVEKIT_API_KEY: string
+    LIVEKIT_API_SECRET: string
 }
 
 
 
 export const envProvider = (): EnvType => {
-    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS", "EMAIL_FROM", "REDIS_URL", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"]
+    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS", "EMAIL_FROM", "REDIS_URL", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "LIVEKIT_HOST", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"]
     configKey.forEach((key) => {
         if (!process.env[key]) {
             throw new Error(`Missing environment variable: ${key}`)
@@ -54,17 +57,21 @@ export const envProvider = (): EnvType => {
         BCRYPT_SALT_ROUND: process.env.BCRYPT_SALT_ROUND as string,
         FRONTEND_URL: process.env.FRONTEND_URL as string,
         NODE_ENV: process.env.NODE_ENV as string,
-        EMAIL_HOST: process.env.SMTP_HOST as string,
-        EMAIL_PORT: Number(process.env.SMTP_PORT),
-        EMAIL_USER: process.env.SMTP_USER as string,
-        EMAIL_PASS: process.env.SMTP_PASS as string,
-        EMAIL_FROM: process.env.SMTP_FROM as string,
+        EMAIL_HOST: process.env.EMAIL_HOST as string,
+        EMAIL_PORT: Number(process.env.EMAIL_PORT),
+        EMAIL_USER: process.env.EMAIL_USER as string,
+        EMAIL_PASS: process.env.EMAIL_PASS as string,
+        EMAIL_FROM: process.env.EMAIL_FROM as string,
         REDIS_URL: process.env.REDIS_URL as string,
         CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
         CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
         CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
+        LIVEKIT_HOST: process.env.LIVEKIT_HOST as string,
+        LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY as string,
+        LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET as string,
     }
 }
+
 
 
 

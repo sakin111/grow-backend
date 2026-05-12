@@ -3,7 +3,9 @@ import { prisma } from "./app/lib/prisma";
 import { app } from "./app";
 import { seedAdmin } from "./app/shared/seedAdmin";
 import { setupSocket, setIoInstance } from "./app/lib/socket";
+import { setupVideoNamespace } from "./app/socket/videoNamespace";
 import { connectRedis } from "./app/lib/redis";
+
 
 
 let server: Server
@@ -16,6 +18,8 @@ export async function StartServer() {
         const httpServer = new Server(app);
         const io = setupSocket(httpServer);
         setIoInstance(io);
+        setupVideoNamespace(io);
+
 
         server = httpServer.listen(process.env.ENV_PORT, () => {
             console.log(`Server is running on port ${process.env.ENV_PORT}`)
