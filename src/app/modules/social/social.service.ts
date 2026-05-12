@@ -131,9 +131,8 @@ const followCompany = async (followerUserId: string, followingId: string) => {
 };
 
 const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
-  const { topic, searchTerm, page = 1, limit = 10 } = filters;
+  const { topic, searchTerm, page = 1, limit = 10, sortBy } = filters;
   const skip = (page - 1) * limit;
-
 
   const userCompany = await prisma.company.findUnique({
     where: { ownerId: userId },
@@ -148,7 +147,6 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
     followingIds = following.map((f) => f.followingId);
   }
 
-
   const whereCondition: any = {
     isDeleted: false,
   };
@@ -161,6 +159,7 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
     whereCondition.content = { contains: searchTerm, mode: "insensitive" };
   }
 
+  // Fetch posts with a base ordering
   const result = await prisma.post.findMany({
     where: whereCondition,
     include: {
@@ -173,24 +172,29 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
         take: 1,
       },
     },
-    orderBy: filters.sortBy === "trending"
+    orderBy: sortBy === "trending"
       ? { likes: { _count: "desc" } }
-      : [
-        { createdAt: "desc" },
-      ],
+      : { createdAt: "desc" },
     skip,
     take: limit,
   });
 
-  // Since Prisma doesn't support complex "followed first" sorting easily in findMany, 
-  // we might need to do two queries or use raw SQL if it gets complicated.
-  // For now, let's just sort by date but prioritize followed in the UI or a simpler way.
-
-  // Alternative: manually sort or use separate queries.
-  // Let's stick to recent for now as requested "recent + followed + trending".
+  // Professional Approach: Prioritize followed companies in the returned list
+  // Note: For large datasets and deep pagination, this should be done via raw SQL or a dedicated search engine.
+  // For standard feed usage, we can sort the fetched batch if necessary, 
+  // but usually "followed first" is a filter or a specific feed tab.
+  // Here we sort the current page results to put followed companies at the top.
+  if (followingIds.length > 0 && sortBy !== "trending") {
+    result.sort((a, b) => {
+      const aFollowed = followingIds.includes(a.companyId) ? 1 : 0;
+      const bFollowed = followingIds.includes(b.companyId) ? 1 : 0;
+      return bFollowed - aFollowed;
+    });
+  }
 
   return result;
 };
+
 
 export const SocialService = {
   createPost,

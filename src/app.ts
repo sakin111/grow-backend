@@ -1,5 +1,7 @@
 import express, { Application, Request, Response } from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import { rateLimit } from 'express-rate-limit'
 import router from './app/routes'
 import passport from "passport"
 import "./app/config/passport"
@@ -10,9 +12,24 @@ import notFound from './app/error/notFound'
 import cookieParser from 'cookie-parser'
 import { RedisStore } from "connect-redis"
 import { redisClient } from './app/lib/redis'
+import swaggerUi from 'swagger-ui-express'
+import { swaggerSpec } from './app/config/swagger'
 
 export const app: Application = express()
 
+// Security Headers
+app.use(helmet())
+
+// Rate Limiting
+const limiter = rateLimit({
+   windowMs: 15 * 60 * 1000, // 15 minutes
+   max: 100, // limit each IP to 100 requests per windowMs
+   message: "Too many requests from this IP, please try again after 15 minutes",
+   standardHeaders: true,
+   legacyHeaders: false,
+})
+
+app.use("/api", limiter)
 
 // session
 const redisStore = new RedisStore({
@@ -26,12 +43,24 @@ app.use(expressSession({
    resave: false,
    saveUninitialized: false
 }))
+
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors())
+
+// CORS Hardening
+app.use(cors({
+   origin: envVar.NODE_ENV === 'production' ? ['https://your-domain.com'] : ['http://localhost:3000', 'http://localhost:5173'],
+   credentials: true,
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+   allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.use(express.urlencoded({ extended: true }))
+
+// Swagger Docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // router
 app.use("/api/v1", router)
@@ -41,7 +70,5 @@ app.get("/", (req: Request, res: Response) => {
    res.status(200).json({ message: "the GROW API is running successfully!" })
 })
 
-
-
 app.use(globalErrorHandler)
-app.use(notFound)
+app.use(notFound)

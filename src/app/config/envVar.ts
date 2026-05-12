@@ -23,12 +23,15 @@ export interface EnvType {
     EMAIL_PASS: string
     EMAIL_FROM: string
     REDIS_URL: string
+    CLOUDINARY_CLOUD_NAME: string
+    CLOUDINARY_API_KEY: string
+    CLOUDINARY_API_SECRET: string
 }
 
 
 
 export const envProvider = (): EnvType => {
-    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "REDIS_URL"]
+    const configKey: string[] = ["ENV_PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS", "EMAIL_FROM", "REDIS_URL", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"]
     configKey.forEach((key) => {
         if (!process.env[key]) {
             throw new Error(`Missing environment variable: ${key}`)
@@ -57,8 +60,12 @@ export const envProvider = (): EnvType => {
         EMAIL_PASS: process.env.SMTP_PASS as string,
         EMAIL_FROM: process.env.SMTP_FROM as string,
         REDIS_URL: process.env.REDIS_URL as string,
+        CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
+        CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+        CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
     }
 }
+
 
 
 export const envVar = envProvider()

@@ -9,6 +9,8 @@ import { sessionRouter } from "../modules/session/session.route"
 import { reviewRouter } from "../modules/review/review.route"
 import { notificationRouter } from "../modules/notification/notification.route"
 import { SocialRoutes } from "../modules/social/social.route"
+import { uploadRouter } from "../modules/upload/upload.route"
+
 
 
 const router = Router()
@@ -54,6 +56,11 @@ const moduleRoute= [
         path: "/social",
         route: SocialRoutes
     },
+    {
+        path: "/upload",
+        route: uploadRouter
+    },
+
 
 ]
 
