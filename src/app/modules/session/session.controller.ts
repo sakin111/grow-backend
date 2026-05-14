@@ -125,6 +125,51 @@ const getAllBookings = CatchAsync(
   }
 );
 
+const startSession = CatchAsync(
+  async (req: Request, res: Response) => {
+    const mentorUserId = (req.user as IJwtPayload)?.id;
+    const { id: bookingId } = req.params;
+    const result = await SessionServices.startSession(mentorUserId, bookingId as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Session Started Successfully",
+      data: result,
+    });
+  }
+);
+
+const joinSession = CatchAsync(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as IJwtPayload)?.id;
+    const { id: bookingId } = req.params;
+    const result = await SessionServices.joinSession(userId, bookingId as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Session Joined Successfully",
+      data: result,
+    });
+  }
+);
+
+const endSession = CatchAsync(
+  async (req: Request, res: Response) => {
+    const mentorUserId = (req.user as IJwtPayload)?.id;
+    const { id: bookingId } = req.params;
+    const result = await SessionServices.endSession(mentorUserId, bookingId as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Session Ended Successfully",
+      data: result,
+    });
+  }
+);
+
 export const SessionControllers = {
   createBooking,
   confirmBooking,
@@ -133,4 +178,8 @@ export const SessionControllers = {
   getMyBookings,
   getSingleBooking,
   getAllBookings,
+  startSession,
+  joinSession,
+  endSession,
 };
+

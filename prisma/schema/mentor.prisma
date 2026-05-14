@@ -7,11 +7,14 @@ model MentorProfile {
   avgRating   Float    @default(0)
 
   userId String @unique
+
   user   User   @relation(fields: [userId], references: [id])
 
   availability MentorAvailability[]
   bookings     SessionBooking[]
   reviews      Review[]
+  videoSessions VideoSession[]
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

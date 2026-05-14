@@ -30,6 +30,8 @@ model User {
   likes            Like[]
   saves            Save[]
   shares           Share[]
+  videoSessions    VideoSession[]
+
 
   emailVerified    Boolean  @default(false)
   emailVerifiedAt  DateTime?
