@@ -126,7 +126,7 @@ const resetPassword = async (payload: Record<string, any>, decodedToken: JwtPayl
 
     const isUserExist = await prisma.user.findUnique({
         where: {
-            id: decodedToken.id
+            id: decodedToken.userId
         }
     })
     if (!isUserExist) {

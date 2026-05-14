@@ -70,6 +70,7 @@ router.post("/logout", authController.logout)
  *         description: Email verified successfully
  */
 router.get("/verify-email", authController.verifyEmail)
+router.post("/verify-email", authController.verifyEmail)
 
 /**
  * @swagger

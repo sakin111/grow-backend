@@ -12,17 +12,16 @@ passport.use(new localStrategy({
     try {
         const userExist = await prisma.user.findUnique({
             where: { email },
-            include:{
-                auths:true
+            include: {
+                auths: true
             }
         })
 
+        if (!userExist) { return done(null, false, { message: "User does not exist" }) }
+
         const googleAuth = userExist?.auths.some(auth => auth.provider === "GOOGLE")
-        if(googleAuth){
+        if (googleAuth) {
             return done(null, false, { message: "Please login with Google" })
-        }
-        if (!userExist) {
-            return done(null, false, { message: "User does not exist" })
         }
         const isPasswordValid = await bcrypt.compare(password, userExist.password)
         if (!isPasswordValid) {
@@ -60,7 +59,7 @@ passport.use(new GoogleStrategy({
         let userExist = await prisma.user.findUnique({
             where: { email }
         })
-        
+
 
         if (!userExist) {
             const randomPassword = Math.random().toString(36).slice(-8);
@@ -91,14 +90,14 @@ passport.use(new GoogleStrategy({
 }))
 
 
-passport.serializeUser((user: any, done: (err:any, id?: unknown) => void) => {
+passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
     done(null, user.id)
 })
 
-passport.deserializeUser(async (id: any, done: (err: any, user?:unknown) => void) =>{
+passport.deserializeUser(async (id: any, done: (err: any, user?: unknown) => void) => {
     try {
         const user = await prisma.user.findUnique({
-            where: {id}
+            where: { id }
         })
         done(null, user)
     } catch (error) {

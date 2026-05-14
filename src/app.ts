@@ -51,7 +51,7 @@ app.use(cookieParser())
 
 // CORS Hardening
 app.use(cors({
-   origin: envVar.NODE_ENV === 'production' ? ['https://your-domain.com'] : ['http://localhost:3000', 'http://localhost:5173'],
+   origin: [envVar.FRONTEND_URL],
    credentials: true,
    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
    allowedHeaders: ['Content-Type', 'Authorization']

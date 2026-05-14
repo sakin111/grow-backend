@@ -76,7 +76,7 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
 const getAccessToken = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-        return new AppError(httpStatus.BAD_REQUEST, "Refresh token is required")
+        return next(new AppError(httpStatus.BAD_REQUEST, "Refresh token is required"))
     }
     const newAccessToken = await createNewAccessTokenWithRefreshToken(refreshToken)
     sendResponse(res, {
@@ -190,4 +190,4 @@ export const authController = {
     forgotPassword,
     resetPassword,
     verifyEmail
-};
+};
