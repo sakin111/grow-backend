@@ -129,7 +129,7 @@ const startSession = CatchAsync(
   async (req: Request, res: Response) => {
     const mentorUserId = (req.user as IJwtPayload)?.id;
     const { id: bookingId } = req.params;
-    const result = await SessionServices.startSession(mentorUserId, bookingId);
+    const result = await SessionServices.startSession(mentorUserId, bookingId as string);
 
     sendResponse(res, {
       success: true,
@@ -144,7 +144,7 @@ const joinSession = CatchAsync(
   async (req: Request, res: Response) => {
     const userId = (req.user as IJwtPayload)?.id;
     const { id: bookingId } = req.params;
-    const result = await SessionServices.joinSession(userId, bookingId);
+    const result = await SessionServices.joinSession(userId, bookingId as string);
 
     sendResponse(res, {
       success: true,
@@ -159,7 +159,7 @@ const endSession = CatchAsync(
   async (req: Request, res: Response) => {
     const mentorUserId = (req.user as IJwtPayload)?.id;
     const { id: bookingId } = req.params;
-    const result = await SessionServices.endSession(mentorUserId, bookingId);
+    const result = await SessionServices.endSession(mentorUserId, bookingId as string);
 
     sendResponse(res, {
       success: true,

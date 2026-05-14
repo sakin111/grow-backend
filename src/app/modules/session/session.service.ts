@@ -461,6 +461,8 @@ const startSession = async (mentorUserId: string, bookingId: string) => {
         await prisma.videoSession.create({
             data: {
                 bookingId: bookingId,
+                mentorId: booking.mentorId,
+                ownerId: booking.ownerId,
                 meetingLink: `${envVar.FRONTEND_URL}/session/${bookingId}`,
                 status: SessionStatus.ONGOING,
             }

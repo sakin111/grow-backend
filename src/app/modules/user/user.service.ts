@@ -32,7 +32,6 @@ const createUser = async (payload: any) => {
         }
     })
 
-    // Email Verification Flow
     const token = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit code or use UUID
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
