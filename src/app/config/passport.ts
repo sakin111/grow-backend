@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma"
 import bcrypt from "bcryptjs"
 import { Strategy as GoogleStrategy } from "passport-google-oauth2"
 import { Role } from "@prisma/client"
+import { logger } from "../lib/logger"
 
 passport.use(new localStrategy({
     usernameField: "email",
@@ -29,7 +30,7 @@ passport.use(new localStrategy({
         }
         done(null, userExist)
     } catch (error) {
-        console.log(error)
+        logger.error({ err: error }, "Local strategy error")
         done(error, false)
     }
 }))
@@ -41,18 +42,16 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_CALLBACK_URL || "",
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
-        console.log("Google auth profile:", {
+        logger.debug({
             id: profile.id,
             provider: profile.provider,
             displayName: profile.displayName,
-            emails: profile.emails,
             email: profile.email,
-            photos: profile.photos,
-        })
+        }, "Google auth profile")
 
         const email = profile.emails?.[0].value;
         if (!email) {
-            console.error("Google auth missing email in profile", profile)
+            logger.error({ profile }, "Google auth missing email in profile")
             return done(null, false, { message: "Email is required" })
         }
 
@@ -84,7 +83,7 @@ passport.use(new GoogleStrategy({
 
         done(null, userExist)
     } catch (error) {
-        console.log(error)
+        logger.error({ err: error }, "Google strategy error")
         done(error, false)
     }
 }))

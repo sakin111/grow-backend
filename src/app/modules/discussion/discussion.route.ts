@@ -7,7 +7,7 @@ import { DiscussionValidations } from "./discussion.validation";
 
 const router = Router();
 
-// Discussion routes
+
 router.post(
   "/discussion",
   checkAuth(Role.OWNER, Role.ADMIN),
@@ -15,6 +15,14 @@ router.post(
   DiscussionControllers.createDiscussion
 );
 router.get("/discussion", DiscussionControllers.getAllDiscussions);
+
+router.post(
+  "/comments",
+  checkAuth(Role.OWNER, Role.ADMIN),
+  validateRequest(DiscussionValidations.createCommentValidationSchema),
+  DiscussionControllers.createComment
+);
+
 router.get("/discussion/:id", DiscussionControllers.getSingleDiscussion);
 router.patch(
   "/discussion/:id",
@@ -28,13 +36,7 @@ router.delete(
   DiscussionControllers.deleteDiscussion
 );
 
-// Comment routes
-router.post(
-  "/comments",
-  checkAuth(Role.OWNER, Role.ADMIN),
-  validateRequest(DiscussionValidations.createCommentValidationSchema),
-  DiscussionControllers.createComment
-);
+
 router.patch(
   "/comments/:id",
   checkAuth(Role.OWNER, Role.ADMIN),

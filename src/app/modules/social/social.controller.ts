@@ -72,14 +72,28 @@ const followCompany = CatchAsync(async (req: Request, res: Response) => {
 
 const getSocialFeed = CatchAsync(async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-  const result = await SocialService.getSocialFeed(userId, req.query as any);
+  const { data, meta } = await SocialService.getSocialFeed(userId, req.query as any);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Social feed retrieved successfully",
-    data: result,
+    data,
+    meta,
   });
 });
+
+const searchPosts = CatchAsync(async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const { data, meta } = await SocialService.searchPosts(userId, req.query as any);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Posts retrieved successfully",
+    data,
+    meta,
+  });
+});
+
 
 export const SocialController = {
   createPost,
@@ -89,4 +103,5 @@ export const SocialController = {
   toggleLike,
   followCompany,
   getSocialFeed,
+  searchPosts
 };

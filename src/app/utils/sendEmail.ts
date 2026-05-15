@@ -3,6 +3,7 @@ import ejs from "ejs"
 import path from "path"
 import nodemailers from "nodemailer"
 import { envVar } from "../config/envVar";
+import { logger } from "../lib/logger";
 
 
 export interface IsendEmail {
@@ -46,9 +47,9 @@ export const sendEmail = async ({ to, subject, templateName, templateData, attac
             }))
         })
 
-        console.log(info);
+        logger.info({ to, subject, messageId: info.messageId }, "Email sent successfully");
     } catch (error: any) {
-        console.log("email sending error", error.message);
+        logger.error({ err: error, to, subject }, "Email sending error");
         throw new AppError(401, "Email error")
     }
 }

@@ -1,5 +1,7 @@
 import express, { Application, Request, Response } from 'express'
 import cors from 'cors'
+import { prisma } from './app/lib/prisma'
+import { logger } from './app/lib/logger'
 import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import router from './app/routes'
@@ -68,6 +70,17 @@ app.use("/api/v1", router)
 // connected or not
 app.get("/", (req: Request, res: Response) => {
    res.status(200).json({ message: "the GROW API is running successfully!" })
+})
+
+// Health-check endpoint for Docker / load balancers
+app.get("/health", async (_req: Request, res: Response) => {
+   try {
+      await prisma.$queryRaw`SELECT 1`
+      res.json({ status: "ok", uptime: process.uptime() })
+   } catch {
+      logger.error("Health check failed: database unreachable")
+      res.status(503).json({ status: "error", message: "Database unreachable" })
+   }
 })
 
 app.use(globalErrorHandler)

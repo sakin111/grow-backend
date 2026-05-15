@@ -7,14 +7,14 @@ import { Role } from "@prisma/client";
 
 const router = Router();
 
-// ===================== MENTOR SEARCH (public-ish, any authenticated user) =====================
+
 router.get(
   "/search",
   checkAuth(...Object.values(Role)),
   MentorControllers.searchMentors
 );
 
-// ===================== MENTOR PROFILE =====================
+
 router.post(
   "/profile",
   checkAuth(Role.MENTOR),
@@ -28,11 +28,14 @@ router.get(
   MentorControllers.getMyMentorProfile
 );
 
-router.get(
-  "/profile/:id",
-  checkAuth(...Object.values(Role)),
-  MentorControllers.getMentorProfile
+
+router.post(
+  "/availability",
+  checkAuth(Role.MENTOR),
+  validateRequest(MentorValidation.createAvailabilitySchema),
+  MentorControllers.addAvailability
 );
+
 
 router.patch(
   "/profile",
@@ -47,13 +50,13 @@ router.delete(
   MentorControllers.deleteMentorProfile
 );
 
-// ===================== MENTOR AVAILABILITY =====================
-router.post(
-  "/availability",
-  checkAuth(Role.MENTOR),
-  validateRequest(MentorValidation.createAvailabilitySchema),
-  MentorControllers.addAvailability
+
+router.get(
+  "/profile/:id",
+  checkAuth(...Object.values(Role)),
+  MentorControllers.getMentorProfile
 );
+
 
 router.get(
   "/availability/:mentorId",

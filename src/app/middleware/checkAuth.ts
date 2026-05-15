@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma";
 import { UserStatus } from "@prisma/client";
 import { envVar } from "../config/envVar";
 import { JwtPayload } from "jsonwebtoken";
+import { logger } from "../lib/logger";
 
 
 
@@ -42,7 +43,7 @@ export const checkAuth = (...authRoles: string[]) => async (req: Request, res: R
         next()
 
     } catch (error) {
-        console.log("jwt error", error);
+        logger.warn({ err: error }, "JWT authentication error");
         next(error)
     }
 }

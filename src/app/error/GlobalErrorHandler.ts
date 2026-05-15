@@ -4,32 +4,74 @@ import { NextFunction, Request, Response } from "express";
 import { envVar } from "../config/envVar";
 import { TErrorSources } from "../Interface/error.interface";
 import AppError from "../errorHelper/AppError";
+import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
+import { logger } from "../lib/logger";
 
 
 
 export const globalErrorHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
     if (envVar.NODE_ENV === "development") {
-        console.log(err);
+        logger.error({ err }, "Unhandled error");
     }
-    // console.log({ file: req.files });
-    // if (req.file) {
-    //     await deleteImageFromCLoudinary(req.file.path)
-    // }
-
-    // if (req.files && Array.isArray(req.files) && req.files.length) {
-    //     const imageUrls = (req.files as Express.Multer.File[]).map(file => file.path)
-
-    //     await Promise.all(imageUrls.map(url => deleteImageFromCLoudinary(url)))
-    // }
 
     let errorSources: TErrorSources[] = []
     let statusCode = 500
     let message = "Something Went Wrong!!"
 
-    if (err instanceof AppError) {
+    // ── Zod validation errors (thrown by validateRequest middleware) ──
+    if (err instanceof ZodError) {
+        statusCode = 422
+        message = "Validation failed"
+        errorSources = err.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+        }))
+    }
+    // ── Prisma known request errors ──
+    else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (err.code) {
+            case "P2002": // unique constraint violation
+                statusCode = 409
+                message = "Resource already exists"
+                errorSources = [{
+                    path: (err.meta?.target as string[])?.join(", ") || "unknown",
+                    message: `Duplicate value on field(s): ${(err.meta?.target as string[])?.join(", ") || "unknown"}`,
+                }]
+                break
+            case "P2025": // record not found
+                statusCode = 404
+                message = "Resource not found"
+                errorSources = [{
+                    path: "",
+                    message: err.meta?.cause as string || "The requested record was not found",
+                }]
+                break
+            default:
+                statusCode = 400
+                message = "Database request error"
+                errorSources = [{
+                    path: "",
+                    message: err.message,
+                }]
+        }
+    }
+    // ── Prisma validation errors (bad input types, missing fields, etc.) ──
+    else if (err instanceof Prisma.PrismaClientValidationError) {
+        statusCode = 422
+        message = "Database validation error"
+        errorSources = [{
+            path: "",
+            message: "Invalid data provided to the database query",
+        }]
+    }
+    // ── Application errors (our custom AppError) ──
+    else if (err instanceof AppError) {
         statusCode = err.statusCode
         message = err.message
-    } else if (err instanceof Error) {
+    }
+    // ── Generic errors ──
+    else if (err instanceof Error) {
         statusCode = 500;
         message = err.message
     }

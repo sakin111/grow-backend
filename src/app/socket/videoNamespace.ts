@@ -1,15 +1,16 @@
 import { Server, Socket } from 'socket.io';
+import { logger } from '../lib/logger';
 
 
 export const setupVideoNamespace = (io: Server) => {
   const videoNamespace = io.of('/video');
 
   videoNamespace.on('connection', (socket: Socket) => {
-    console.log('User connected to video namespace:', socket.id);
+    logger.info({ socketId: socket.id }, 'User connected to video namespace');
 
     socket.on('join-room', async ({ bookingId }: { bookingId: string }) => {
       socket.join(`room:${bookingId}`);
-      console.log(`User ${socket.id} joined room:${bookingId}`);
+      logger.info({ socketId: socket.id, bookingId }, 'User joined video room');
       videoNamespace.to(`room:${bookingId}`).emit('participant-joined', { userId: socket.id });
     });
 
@@ -43,7 +44,7 @@ export const setupVideoNamespace = (io: Server) => {
     });
 
     socket.on('disconnect', () => {
-      console.log('User disconnected from video namespace:', socket.id);
+      logger.info({ socketId: socket.id }, 'User disconnected from video namespace');
     });
   });
 };

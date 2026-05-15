@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express"
+import { logger } from "../../lib/logger"
 import CatchAsync from "../../shared/CatchAsync"
 import passport from "passport"
 import AppError from "../../errorHelper/AppError"
@@ -66,7 +67,7 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
     setAuthCookie(res, userToken)
 
     const redirectUrl = `${envVar.FRONTEND_URL}/${redirectTo}`
-    console.log("Google login redirect to:", redirectUrl)
+    logger.info({ redirectUrl }, "Google login redirect")
     res.redirect(redirectUrl)
 })
 
