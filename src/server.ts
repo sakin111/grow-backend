@@ -5,6 +5,7 @@ import { seedAdmin } from "./app/shared/seedAdmin";
 import { setupSocket, setIoInstance } from "./app/lib/socket";
 import { setupVideoNamespace } from "./app/socket/videoNamespace";
 import { connectRedis } from "./app/lib/redis";
+import { logger } from "./app/lib/logger";
 
 
 
@@ -13,7 +14,7 @@ let server: Server
 export async function StartServer() {
     try {
         await prisma.$connect()
-        console.log("Database connected successfully")
+        logger.info("Database connected successfully")
         await connectRedis()
         const httpServer = new Server(app);
         const io = setupSocket(httpServer);
@@ -22,10 +23,10 @@ export async function StartServer() {
 
 
         server = httpServer.listen(process.env.ENV_PORT, () => {
-            console.log(`Server is running on port ${process.env.ENV_PORT}`)
+            logger.info({ port: process.env.ENV_PORT }, "Server is running")
         })
     } catch (error) {
-        console.error("Error starting the server:", error)
+        logger.fatal({ err: error }, "Error starting the server")
     }
 }
 
@@ -35,7 +36,7 @@ export async function StartServer() {
 })()
 
 process.on("SIGTERM", (err) => {
-    console.log("SIGTERM received, shutting down gracefully...")
+    logger.warn("SIGTERM received, shutting down gracefully...")
     if (server) {
         server.close(() => {
             process.exit(1)
@@ -45,7 +46,7 @@ process.on("SIGTERM", (err) => {
 })
 
 process.on("unhandledRejection", (err) => {
-    console.log("unhandledRejection is detected, shutting down the server", err)
+    logger.error({ err }, "unhandledRejection is detected, shutting down the server")
     if (server) {
         server.close(() => {
             process.exit(1)
@@ -54,7 +55,7 @@ process.on("unhandledRejection", (err) => {
     process.exit(1)
 })
 process.on("uncaughtException", (err) => {
-    console.log("uncaughtException is detected, shutting down the server", err)
+    logger.fatal({ err }, "uncaughtException is detected, shutting down the server")
     if (server) {
         server.close(() => {
             process.exit(1)

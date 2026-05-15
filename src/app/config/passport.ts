@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma"
 import bcrypt from "bcryptjs"
 import { Strategy as GoogleStrategy } from "passport-google-oauth2"
 import { Role } from "@prisma/client"
+import { logger } from "../lib/logger"
 
 passport.use(new localStrategy({
     usernameField: "email",
@@ -12,17 +13,16 @@ passport.use(new localStrategy({
     try {
         const userExist = await prisma.user.findUnique({
             where: { email },
-            include:{
-                auths:true
+            include: {
+                auths: true
             }
         })
 
+        if (!userExist) { return done(null, false, { message: "User does not exist" }) }
+
         const googleAuth = userExist?.auths.some(auth => auth.provider === "GOOGLE")
-        if(googleAuth){
+        if (googleAuth) {
             return done(null, false, { message: "Please login with Google" })
-        }
-        if (!userExist) {
-            return done(null, false, { message: "User does not exist" })
         }
         const isPasswordValid = await bcrypt.compare(password, userExist.password)
         if (!isPasswordValid) {
@@ -30,7 +30,7 @@ passport.use(new localStrategy({
         }
         done(null, userExist)
     } catch (error) {
-        console.log(error)
+        logger.error({ err: error }, "Local strategy error")
         done(error, false)
     }
 }))
@@ -42,25 +42,23 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_CALLBACK_URL || "",
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
-        console.log("Google auth profile:", {
+        logger.debug({
             id: profile.id,
             provider: profile.provider,
             displayName: profile.displayName,
-            emails: profile.emails,
             email: profile.email,
-            photos: profile.photos,
-        })
+        }, "Google auth profile")
 
         const email = profile.emails?.[0].value;
         if (!email) {
-            console.error("Google auth missing email in profile", profile)
+            logger.error({ profile }, "Google auth missing email in profile")
             return done(null, false, { message: "Email is required" })
         }
 
         let userExist = await prisma.user.findUnique({
             where: { email }
         })
-        
+
 
         if (!userExist) {
             const randomPassword = Math.random().toString(36).slice(-8);
@@ -85,20 +83,20 @@ passport.use(new GoogleStrategy({
 
         done(null, userExist)
     } catch (error) {
-        console.log(error)
+        logger.error({ err: error }, "Google strategy error")
         done(error, false)
     }
 }))
 
 
-passport.serializeUser((user: any, done: (err:any, id?: unknown) => void) => {
+passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
     done(null, user.id)
 })
 
-passport.deserializeUser(async (id: any, done: (err: any, user?:unknown) => void) =>{
+passport.deserializeUser(async (id: any, done: (err: any, user?: unknown) => void) => {
     try {
         const user = await prisma.user.findUnique({
-            where: {id}
+            where: { id }
         })
         done(null, user)
     } catch (error) {

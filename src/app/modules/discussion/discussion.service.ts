@@ -181,9 +181,9 @@ const deleteDiscussion = async (discussionId: string, userId: string) => {
   return deletedDiscussion;
 };
 
-// Comment Services
+
 const createComment = async (userId: string, payload: any) => {
-  // Check if company exists and user has access to it
+
   const company = await prisma.company.findUnique({
     where: { id: payload.companyId },
   });
@@ -216,7 +216,7 @@ const createComment = async (userId: string, payload: any) => {
     },
   });
 
-  // Notify discussion owner
+
   if (comment.discussion.company.ownerId !== userId) {
     await sendInAppNotification({
       userId: comment.discussion.company.ownerId,
@@ -289,4 +289,4 @@ export const DiscussionServices = {
   createComment,
   updateComment,
   deleteComment,
-};
+};

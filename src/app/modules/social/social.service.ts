@@ -130,22 +130,63 @@ const followCompany = async (followerUserId: string, followingId: string) => {
   }
 };
 
+
+const getFollowingIdSet = async (userId: string): Promise<Set<string>> => {
+  const userCompany = await prisma.company.findUnique({
+    where: { ownerId: userId },
+    select: { id: true },
+  });
+
+  if (!userCompany) return new Set();
+
+  const following = await prisma.follow.findMany({
+    where: { followerId: userCompany.id },
+    select: { followingId: true },
+  });
+
+  return new Set(following.map((f) => f.followingId));
+};
+
+
+const postInclude = (userId: string) => ({
+  company: true,
+  _count: {
+    select: { likes: true, saves: true, shares: true },
+  },
+  likes: {
+    where: { userId },
+    take: 1,
+  },
+});
+
+
+const postOrderBy = (sortBy?: string) =>
+  sortBy === "trending"
+    ? { likes: { _count: "desc" as const } }
+    : { createdAt: "desc" as const };
+
+
+const prioritizeFollowed = <T extends { companyId: string }>(
+  posts: T[],
+  followingSet: Set<string>,
+  shouldPrioritize: boolean,
+) => {
+  const annotated = posts.map((post) => ({
+    ...post,
+    isFollowed: followingSet.has(post.companyId),
+  }));
+
+  if (!shouldPrioritize || followingSet.size === 0) return annotated;
+
+  const followed = annotated.filter((p) => p.isFollowed);
+  const unfollowed = annotated.filter((p) => !p.isFollowed);
+
+  return [...followed, ...unfollowed];
+};
+
 const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
   const { topic, searchTerm, page = 1, limit = 10, sortBy } = filters;
   const skip = (page - 1) * limit;
-
-  const userCompany = await prisma.company.findUnique({
-    where: { ownerId: userId },
-  });
-
-  let followingIds: string[] = [];
-  if (userCompany) {
-    const following = await prisma.follow.findMany({
-      where: { followerId: userCompany.id },
-      select: { followingId: true },
-    });
-    followingIds = following.map((f) => f.followingId);
-  }
 
   const whereCondition: any = {
     isDeleted: false,
@@ -159,42 +200,78 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
     whereCondition.content = { contains: searchTerm, mode: "insensitive" };
   }
 
-  // Fetch posts with a base ordering
-  const result = await prisma.post.findMany({
-    where: whereCondition,
-    include: {
-      company: true,
-      _count: {
-        select: { likes: true, saves: true, shares: true },
-      },
-      likes: {
-        where: { userId },
-        take: 1,
-      },
+  // Run data fetch and total count in parallel for efficiency
+  const [posts, total, followingSet] = await Promise.all([
+    prisma.post.findMany({
+      where: whereCondition,
+      include: postInclude(userId),
+      orderBy: postOrderBy(sortBy),
+      skip,
+      take: limit,
+    }),
+    prisma.post.count({ where: whereCondition }),
+    getFollowingIdSet(userId),
+  ]);
+
+  // Prioritize followed companies (skip for trending – engagement order matters more)
+  const data = prioritizeFollowed(posts, followingSet, sortBy !== "trending");
+
+  return {
+    data,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPage: Math.ceil(total / limit),
     },
-    orderBy: sortBy === "trending"
-      ? { likes: { _count: "desc" } }
-      : { createdAt: "desc" },
-    skip,
-    take: limit,
-  });
-
-  // Professional Approach: Prioritize followed companies in the returned list
-  // Note: For large datasets and deep pagination, this should be done via raw SQL or a dedicated search engine.
-  // For standard feed usage, we can sort the fetched batch if necessary, 
-  // but usually "followed first" is a filter or a specific feed tab.
-  // Here we sort the current page results to put followed companies at the top.
-  if (followingIds.length > 0 && sortBy !== "trending") {
-    result.sort((a, b) => {
-      const aFollowed = followingIds.includes(a.companyId) ? 1 : 0;
-      const bFollowed = followingIds.includes(b.companyId) ? 1 : 0;
-      return bFollowed - aFollowed;
-    });
-  }
-
-  return result;
+  };
 };
 
+const searchPosts = async (userId: string, query: any) => {
+  const { searchTerm, topic, page = 1, limit = 10, sortBy } = query;
+  const skip = (page - 1) * limit;
+
+  const whereCondition: any = {
+    isDeleted: false,
+  };
+
+  if (searchTerm) {
+    whereCondition.OR = [
+      { title: { contains: searchTerm, mode: "insensitive" } },
+      { content: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
+
+  if (topic) {
+    whereCondition.topic = topic;
+  }
+
+  // Run data fetch and total count in parallel for efficiency
+  const [posts, total, followingSet] = await Promise.all([
+    prisma.post.findMany({
+      where: whereCondition,
+      include: postInclude(userId),
+      orderBy: postOrderBy(sortBy),
+      skip,
+      take: limit,
+    }),
+    prisma.post.count({ where: whereCondition }),
+    getFollowingIdSet(userId),
+  ]);
+
+  // Annotate with isFollowed and prioritize followed companies
+  const data = prioritizeFollowed(posts, followingSet, sortBy !== "trending");
+
+  return {
+    data,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
 
 export const SocialService = {
   createPost,
@@ -204,4 +281,5 @@ export const SocialService = {
   toggleLike,
   followCompany,
   getSocialFeed,
+  searchPosts,
 };

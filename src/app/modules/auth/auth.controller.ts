@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express"
+import { logger } from "../../lib/logger"
 import CatchAsync from "../../shared/CatchAsync"
 import passport from "passport"
 import AppError from "../../errorHelper/AppError"
@@ -66,7 +67,7 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
     setAuthCookie(res, userToken)
 
     const redirectUrl = `${envVar.FRONTEND_URL}/${redirectTo}`
-    console.log("Google login redirect to:", redirectUrl)
+    logger.info({ redirectUrl }, "Google login redirect")
     res.redirect(redirectUrl)
 })
 
@@ -76,7 +77,7 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
 const getAccessToken = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-        return new AppError(httpStatus.BAD_REQUEST, "Refresh token is required")
+        return next(new AppError(httpStatus.BAD_REQUEST, "Refresh token is required"))
     }
     const newAccessToken = await createNewAccessTokenWithRefreshToken(refreshToken)
     sendResponse(res, {
@@ -190,4 +191,4 @@ export const authController = {
     forgotPassword,
     resetPassword,
     verifyEmail
-};
+};

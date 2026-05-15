@@ -16,6 +16,8 @@ router.post(
   SocialController.createPost
 );
 
+router.get("/search-post", checkAuth(...Object.values(Role)), SocialController.searchPosts);
+
 router.get("/post/:id", checkAuth(Role.OWNER, Role.MENTOR, Role.ADMIN), SocialController.getPostById);
 
 router.patch(

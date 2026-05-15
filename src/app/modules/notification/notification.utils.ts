@@ -2,6 +2,7 @@
 import { NotificationType } from "@prisma/client";
 import { NotificationServices } from "./notification.service";
 import { emitToUser } from "../../lib/socket";
+import { logger } from "../../lib/logger";
 
 export const sendInAppNotification = async (payload: {
   userId: string;
@@ -15,6 +16,6 @@ export const sendInAppNotification = async (payload: {
     emitToUser(payload.userId, "notification", notification);
     return notification;
   } catch (error) {
-    console.error("Error sending notification:", error);
+    logger.error({ err: error, userId: payload.userId, type: payload.type }, "Error sending notification");
   }
 };

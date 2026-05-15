@@ -2,6 +2,7 @@ import bcryptjs from "bcryptjs";
 import { envVar } from "../config/envVar";
 import { prisma } from "../lib/prisma";
 import { Provider, Role, User, UserStatus } from "@prisma/client";
+import { logger } from "../lib/logger";
 
 
 interface IAuthProvider {
@@ -15,11 +16,11 @@ export const seedAdmin = async () => {
         const isSuperAdminExist = await prisma.user.findUnique({ where: { email: envVar.SUPER_ADMIN } })
 
         if (isSuperAdminExist) {
-            console.log("Super Admin Already Exists!");
+            logger.info("Super Admin Already Exists!");
             return;
         }
 
-        console.log("Trying to create Super Admin...");
+        logger.info("Trying to create Super Admin...");
 
         const hashedPassword = await bcryptjs.hash(envVar.SUPER_ADMIN_PASSWORD, Number(envVar.BCRYPT_SALT_ROUND))
 
@@ -38,9 +39,8 @@ export const seedAdmin = async () => {
                 }
             }
         });
-        console.log("Super Admin Created Successfully! \n");
-        console.log(superAdmin);
+        logger.info({ adminId: superAdmin.id }, "Super Admin Created Successfully!");
     } catch (error) {
-        console.log(error);
+        logger.error({ err: error }, "Failed to seed Super Admin");
     }
 }

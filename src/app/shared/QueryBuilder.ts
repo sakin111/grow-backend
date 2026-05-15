@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { logger } from "../lib/logger";
 
 export class QueryBuilder<M extends keyof PrismaClient> {
     private model: any;
@@ -73,7 +74,7 @@ export class QueryBuilder<M extends keyof PrismaClient> {
                     gte: new Date(startDate)
                 };
             } catch (error) {
-                console.error('Invalid start date format:', startDate);
+                logger.warn({ startDate }, 'Invalid start date format');
             }
         }
 
@@ -85,7 +86,7 @@ export class QueryBuilder<M extends keyof PrismaClient> {
                     lte: new Date(endDate)
                 };
             } catch (error) {
-                console.error('Invalid end date format:', endDate);
+                logger.warn({ endDate }, 'Invalid end date format');
             }
         }
 
@@ -189,16 +190,8 @@ export class QueryBuilder<M extends keyof PrismaClient> {
 
 
     addWhere(condition: Record<string, any>): this {
-        if (Object.keys(this.where).length > 0) {
-            this.where = {
-                AND: [
-                    this.where,
-                    condition
-                ]
-            };
-        } else {
-            this.where = condition;
-        }
+        if (!this.where.AND) this.where.AND = [];
+        this.where.AND.push(condition);
         return this;
     }
 

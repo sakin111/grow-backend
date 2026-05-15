@@ -29,6 +29,10 @@ const createUser = async (payload: any) => {
                 create: [authProvider]
             },
             ...rest
+        },
+        select: {
+            id: true, name: true, email: true,
+            role: true, createdAt: true,
         }
     })
 
@@ -61,6 +65,47 @@ const createUser = async (payload: any) => {
 
 
 
+const getMe = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            mentorProfile: true,
+            company: true
+        }
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    return user;
+};
+
+
+
+const updateMe = async (userId: string, payload: any) => {
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: payload
+    });
+
+    return user;
+};
+
+
+const updateRole = async (userId: string, role: any) => {
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: { role }
+    });
+
+    return user;
+};
+
+
 export const UserServices = {
-    createUser
+    createUser,
+    getMe,
+    updateMe,
+    updateRole
 }
