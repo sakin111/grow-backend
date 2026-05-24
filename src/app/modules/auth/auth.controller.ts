@@ -169,9 +169,14 @@ const logout = CatchAsync(async (req: Request, res: Response, next: NextFunction
 
 
 const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
-    const { email, token } = req.query;
+    const email = (req.query.email || req.body.email) as string;
+    const token = (req.query.token || req.body.token) as string;
 
-    const result = await AuthServices.verifyEmail(email as string, token as string);
+    if (!email || !token) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Email and token are required for verification");
+    }
+
+    const result = await AuthServices.verifyEmail(email, token);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
