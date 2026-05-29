@@ -10,6 +10,7 @@ import { setAuthCookie } from "../../shared/setCookie"
 import { envVar } from "../../config/envVar"
 import { AuthServices } from "./auth.service"
 import { JwtPayload } from "jsonwebtoken"
+import { prisma } from "../../lib/prisma"
 
 
 
@@ -186,6 +187,39 @@ const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const checkVerificationStatus = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { email } = req.query
+
+    if (!email || typeof email !== 'string') {
+      return sendResponse(res, {
+        statusCode: httpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Email is required',
+        data: { verified: false },
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        emailVerified: true,
+      },
+    })
+
+    const verified = user?.emailVerified ?? false
+
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: verified
+        ? 'Email is verified'
+        : 'Email is not verified',
+      data: { verified },
+    })
+  }
+)
+
 export const authController = {
     login,
     GoogleLogin,
@@ -195,5 +229,6 @@ export const authController = {
     setPassword,
     forgotPassword,
     resetPassword,
-    verifyEmail
+    verifyEmail,
+    checkVerificationStatus
 };
