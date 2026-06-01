@@ -1,8 +1,7 @@
-
 enum Role {
-    OWNER
-    ADMIN
-    MENTOR
+  OWNER
+  ADMIN
+  MENTOR
 }
 
 enum Topic {

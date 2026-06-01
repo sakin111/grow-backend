@@ -1,11 +1,11 @@
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  data      Json?
-  isRead    Boolean  @default(false)
+  id      String           @id @default(uuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  data    Json?
+  isRead  Boolean          @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -14,14 +14,14 @@ model Notification {
 }
 
 model ChatMessage {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   discussionId String
   discussion   Discussion @relation(fields: [discussionId], references: [id])
   senderId     String
   senderName   String
   content      String
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@map("chat_message")
 }

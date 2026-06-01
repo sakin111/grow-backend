@@ -25,7 +25,13 @@ const updateReviewSchema = z.object({
   }),
 });
 
+ const reviewVerificationSchema = z.object({
+  status: z.enum(["VERIFIED", "REJECTED"]),
+  adminNote: z.string().max(500).optional(),
+});
+
 export const ReviewValidation = {
   createReviewSchema,
   updateReviewSchema,
+  reviewVerificationSchema
 };

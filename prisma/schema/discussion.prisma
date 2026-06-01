@@ -1,20 +1,19 @@
-
 model Discussion {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  topic     Topic
+  id      String @id @default(uuid())
+  title   String
+  content String
+  topic   Topic
 
   companyId String
-  company   Company  @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
 
-  comments  Comment[]
+  comments     Comment[]
   chatMessages ChatMessage[]
-  likes     Like[]
-  saves     Save[]
-  shares    Share[]
+  likes        Like[]
+  saves        Save[]
+  shares       Share[]
 
-  isPublic Boolean @default(true)
+  isPublic  Boolean @default(true)
   isDeleted Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -23,19 +22,19 @@ model Discussion {
 }
 
 model Comment {
-  id           String   @id @default(uuid())
-  content      String
+  id      String @id @default(uuid())
+  content String
 
   discussionId String
   discussion   Discussion @relation(fields: [discussionId], references: [id])
 
-  companyId    String
-  company      Company @relation(fields: [companyId], references: [id])
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
 
-  isEdited Boolean @default(false)
+  isEdited  Boolean @default(false)
   isDeleted Boolean @default(false)
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@map("comment")
 }

@@ -19,16 +19,15 @@ model SessionBooking {
 }
 
 model VideoSession {
-  id          String        @id @default(uuid())
-  bookingId   String        @unique
+  id          String         @id @default(uuid())
+  bookingId   String         @unique
   booking     SessionBooking @relation(fields: [bookingId], references: [id])
   meetingLink String
-  status      SessionStatus @default(SCHEDULED)
+  status      SessionStatus  @default(SCHEDULED)
   mentorId    String
-  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
+  mentor      MentorProfile  @relation(fields: [mentorId], references: [id])
   ownerId     String
-  owner       User          @relation(fields: [ownerId], references: [id])
-
+  owner       User           @relation(fields: [ownerId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

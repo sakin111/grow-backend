@@ -55,6 +55,25 @@ const updateCompany = CatchAsync(async (req: Request, res: Response, next: NextF
     })
 })
 
+
+const requestVerification = CatchAsync(async (req: Request, res: Response) => {
+  const companyId = req.params.id as string;
+  const ownerId = (req.user as IJwtPayload)?.id;
+
+  const result = await CompanyServices.requestVerification(
+    companyId,
+    ownerId,
+    req.body
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Verification request sent",
+    data: result,
+  });
+});
+
 const deleteCompany = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const ownerId = (req.user as IJwtPayload)?.id;
@@ -75,4 +94,5 @@ export const CompanyControllers = {
     getSingleCompany,
     updateCompany,
     deleteCompany,
+    requestVerification
 }

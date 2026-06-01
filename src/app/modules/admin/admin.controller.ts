@@ -4,6 +4,7 @@ import { sendResponse } from "../../shared/sendResponse";
 import httpStatus from "http-status";
 import { AdminServices } from "./admin.service";
 import { VerificationStatus } from "@prisma/client";
+import { IJwtPayload } from "../review/review.interface";
 
 const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
   const result = await AdminServices.getAllUsers(req.query);
@@ -42,10 +43,11 @@ const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const verifyCompany = CatchAsync(async (req: Request, res: Response) => {
-  const { companyId } = req.params as any;
-  const { status } = req.body;
-  const result = await AdminServices.verifyCompany(companyId, status);
+const reviewVerification = CatchAsync(async (req: Request, res: Response) => {
+  const { requestId } = req.params as any;
+  const { status, adminNote } = req.body;
+  const adminId = (req.user as IJwtPayload)?.id;
+  const result = await AdminServices.reviewVerification(requestId, adminId, { status, adminNote });
 
   sendResponse(res, {
     success: true,
@@ -59,5 +61,5 @@ export const AdminControllers = {
   getAllUsers,
   updateUserStatus,
   getAllCompanies,
-  verifyCompany,
+  reviewVerification,
 };

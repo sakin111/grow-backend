@@ -7,7 +7,7 @@ import { ICreateCompanyPayload, IUpdateCompanyPayload } from "./company.interfac
 import { QueryBuilder } from "../../shared/QueryBuilder";
 
 const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) => {
-  // Check if user already has a company
+
   const existingCompany = await prisma.company.findUnique({
     where: { ownerId },
   });
@@ -19,7 +19,6 @@ const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) =>
     );
   }
 
-  // Check if user exists
   const user = await prisma.user.findUnique({
     where: { id: ownerId },
   });
@@ -147,10 +146,68 @@ const deleteCompany = async (companyId: string, ownerId: string) => {
   return deletedCompany;
 };
 
+
+const requestVerification = async (
+  companyId: string,
+  ownerId: string,
+  payload: {
+    website?: string;
+    contactEmail?: string;
+    note?: string;
+  }
+) => {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+  });
+
+  if (!company) {
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
+  }
+
+  if (company.ownerId !== ownerId) {
+    throw new AppError(httpStatus.FORBIDDEN, "Not your company");
+  }
+
+  const existing = await prisma.companyVerificationRequest.findFirst({
+    where: {
+      companyId,
+      status: "PENDING",
+    },
+  });
+
+  if (existing) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Verification already pending"
+    );
+  }
+
+  const request = await prisma.companyVerificationRequest.create({
+    data: {
+      companyId,
+      requestedById: ownerId,
+      website: payload.website,
+      contactEmail: payload.contactEmail,
+      note: payload.note,
+    },
+  });
+
+  // update company status
+  await prisma.company.update({
+    where: { id: companyId },
+    data: {
+      verificationStatus: "PENDING",
+    },
+  });
+
+  return request;
+};
+
 export const CompanyServices = {
   createCompany,
   getAllCompanies,
   getSingleCompany,
   updateCompany,
   deleteCompany,
+  requestVerification
 };

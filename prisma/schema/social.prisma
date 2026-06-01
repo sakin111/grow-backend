@@ -1,17 +1,17 @@
 model Post {
-  id        String   @id @default(uuid())
-  content   String
-  image     String?
-  topic     Topic
-  
+  id      String  @id @default(uuid())
+  content String
+  image   String?
+  topic   Topic
+
   companyId String
-  company   Company  @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
 
-  likes     Like[]
-  saves     Save[]
-  shares    Share[]
+  likes  Like[]
+  saves  Save[]
+  shares Share[]
 
-  isDeleted Boolean @default(false)
+  isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -19,13 +19,13 @@ model Post {
 }
 
 model Like {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id])
+
   discussionId String?
   discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
@@ -37,13 +37,13 @@ model Like {
 }
 
 model Save {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id])
+
   discussionId String?
   discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
@@ -55,13 +55,13 @@ model Save {
 }
 
 model Share {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id])
+
   discussionId String?
   discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
@@ -71,14 +71,14 @@ model Share {
 }
 
 model Follow {
-  id          String   @id @default(uuid())
-  followerId  String
-  follower    Company  @relation("Follower", fields: [followerId], references: [id])
-  
-  followingId String
-  following   Company  @relation("Following", fields: [followingId], references: [id])
+  id         String  @id @default(uuid())
+  followerId String
+  follower   Company @relation("Follower", fields: [followerId], references: [id])
 
-  createdAt   DateTime @default(now())
+  followingId String
+  following   Company @relation("Following", fields: [followingId], references: [id])
+
+  createdAt DateTime @default(now())
 
   @@unique([followerId, followingId])
   @@map("follow")

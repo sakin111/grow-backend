@@ -69,29 +69,48 @@ const getAllCompanies = async (query: Record<string, any>) => {
   };
 };
 
-const verifyCompany = async (companyId: string, status: VerificationStatus) => {
-  const company = await prisma.company.findUnique({
-    where: { id: companyId },
+const reviewVerification = async (
+  requestId: string,
+  adminId: string,
+  payload: {
+    status: "VERIFIED" | "REJECTED";
+    adminNote?: string;
+  }
+) => {
+  const request = await prisma.companyVerificationRequest.findUnique({
+    where: { id: requestId },
   });
 
-  if (!company) {
-    throw new AppError(httpStatus.NOT_FOUND, "Company not found");
+  if (!request) {
+    throw new AppError(httpStatus.NOT_FOUND, "Request not found");
   }
 
-  const updatedCompany = await prisma.company.update({
-    where: { id: companyId },
+  const updatedRequest = await prisma.companyVerificationRequest.update({
+    where: { id: requestId },
     data: {
-      verificationStatus: status,
-      verifiedAt: status === VerificationStatus.VERIFIED ? new Date() : null,
+      status: payload.status,
+      adminNote: payload.adminNote,
+      reviewedById: adminId,
     },
   });
 
-  return updatedCompany;
+  await prisma.company.update({
+    where: { id: request.companyId },
+    data: {
+      verificationStatus: payload.status,
+      verifiedAt:
+        payload.status === "VERIFIED" ? new Date() : null,
+    },
+  });
+
+  return updatedRequest;
 };
 
 export const AdminServices = {
   getAllUsers,
   updateUserStatus,
   getAllCompanies,
-  verifyCompany,
+  reviewVerification,
 };
+  
+
