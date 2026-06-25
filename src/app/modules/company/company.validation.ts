@@ -46,8 +46,8 @@ const updateCompanySchema = z.object({
 
 
  const requestVerificationSchema = z.object({
-  website: z.string().url().optional(),
-  contactEmail: z.string().email().optional(),
+  website: z.url(),
+  contactEmail: z.email(),
   note: z.string().max(500).optional(),
 });
 

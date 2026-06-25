@@ -43,22 +43,32 @@ const getSingleCompany = CatchAsync(async (req: Request, res: Response, next: Ne
 })
 
 const updateCompany = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const ownerId = (req.user as IJwtPayload)?.id
-    const company = await CompanyServices.updateCompany(id as string, ownerId, req.body)
+  const { id } = req.params;
+  const ownerId = (req.user as IJwtPayload)?.id
 
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "Company Updated Successfully",
-        data: company,
-    })
+  const payload: any = { ...req.body };
+  if (req.file) {
+    const file: any = req.file;
+    const url = file.path || file.secure_url || file.location || file.url;
+    if (url) payload.logo = url;
+  }
+
+  const company = await CompanyServices.updateCompany(id as string, ownerId, payload)
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Company Updated Successfully",
+    data: company,
+  })
 })
 
 
 const requestVerification = CatchAsync(async (req: Request, res: Response) => {
   const companyId = req.params.id as string;
   const ownerId = (req.user as IJwtPayload)?.id;
+
+
 
   const result = await CompanyServices.requestVerification(
     companyId,

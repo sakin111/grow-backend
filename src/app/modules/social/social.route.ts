@@ -4,6 +4,7 @@ import { Role } from "@prisma/client";
 import { SocialValidation } from "./social.validation";
 import { validateRequest } from "../../middleware/validateRequest";
 import { checkAuth } from "../../middleware/checkAuth";
+import { upload } from "../../middleware/upload";
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.get("/feed", checkAuth(Role.OWNER, Role.MENTOR, Role.ADMIN), SocialContro
 router.post(
   "/post",
   checkAuth(Role.OWNER),
+  upload.single('image'),
   validateRequest(SocialValidation.createPost),
   SocialController.createPost
 );
@@ -42,5 +44,25 @@ router.post(
   validateRequest(SocialValidation.followCompany),
   SocialController.followCompany
 );
+
+router.post(
+  "/comment",
+  checkAuth(...Object.values(Role)),
+  validateRequest(SocialValidation.createComment),
+  SocialController.createComment
+);
+
+
+router.get("/comment/replies/:commentId", checkAuth(...Object.values(Role)), SocialController.getReplies);
+router.get("/comment/:postId", checkAuth(...Object.values(Role)), SocialController.getComments);
+
+router.patch(
+  "/comment/:id",
+  checkAuth(...Object.values(Role)),
+  validateRequest(SocialValidation.updateComment),
+  SocialController.updateComment
+);
+
+router.delete("/comment/:id", checkAuth(...Object.values(Role)), SocialController.deleteComment);
 
 export const SocialRoutes = router;

@@ -44,10 +44,10 @@ const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
 });
 
 const reviewVerification = CatchAsync(async (req: Request, res: Response) => {
-  const { requestId } = req.params as any;
+  const { id } = req.params as any;
   const { status, adminNote } = req.body;
   const adminId = (req.user as IJwtPayload)?.id;
-  const result = await AdminServices.reviewVerification(requestId, adminId, { status, adminNote });
+  const result = await AdminServices.reviewVerification(id, adminId, { status, adminNote });
 
   sendResponse(res, {
     success: true,

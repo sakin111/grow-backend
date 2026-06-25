@@ -10,6 +10,7 @@ model Post {
   likes  Like[]
   saves  Save[]
   shares Share[]
+  comments Comment[]
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -29,12 +30,17 @@ model Like {
   discussionId String?
   discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
   createdAt DateTime @default(now())
 
   @@unique([userId, postId])
   @@unique([userId, discussionId])
+  @@unique([userId, commentId])
   @@map("like")
 }
+
 
 model Save {
   id     String @id @default(uuid())

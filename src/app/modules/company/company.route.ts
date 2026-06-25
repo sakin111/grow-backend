@@ -4,6 +4,7 @@ import { checkAuth } from "../../middleware/checkAuth";
 import { Role } from "@prisma/client";
 import { validate } from "../../error/validation";
 import { CompanyValidation } from "./company.validation";
+import { upload } from "../../middleware/upload";
 
 
 const router = Router()
@@ -13,18 +14,24 @@ router.post(
   checkAuth(Role.OWNER, Role.ADMIN, Role.MENTOR),
   CompanyControllers.createCompany
 )
-router.get("/getAllCompanies", checkAuth(Role.ADMIN), validate(CompanyValidation.createCompanySchema), CompanyControllers.getAllCompanies)
+router.get("/getAllCompanies", checkAuth(Role.ADMIN), CompanyControllers.getAllCompanies)
 
 
 router.post(
-  "/company/:id/request",
+  "/:id/request",
   checkAuth(Role.OWNER),
   validate(CompanyValidation.requestVerificationSchema),
   CompanyControllers.requestVerification
 );
 
 router.get("/getSingleCompany/:id", checkAuth(Role.ADMIN,Role.OWNER,Role.MENTOR), CompanyControllers.getSingleCompany)
-router.patch("/updateCompany/:id", checkAuth(Role.OWNER,Role.ADMIN,Role.MENTOR), validate(CompanyValidation.updateCompanySchema), CompanyControllers.updateCompany)
+router.patch(
+  "/updateCompany/:id",
+  checkAuth(Role.OWNER, Role.ADMIN, Role.MENTOR),
+  upload.single('logo'),
+  validate(CompanyValidation.updateCompanySchema),
+  CompanyControllers.updateCompany
+)
 router.delete("/deleteCompany/:id", checkAuth(Role.OWNER,Role.ADMIN,Role.MENTOR), CompanyControllers.deleteCompany)
 
 export const companyRouter = router

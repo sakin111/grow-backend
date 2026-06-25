@@ -17,17 +17,21 @@ const createPost = async (userId: string, payload: IPostCreate) => {
   return result;
 };
 
-const getPostById = async (id: string) => {
-  const result = await prisma.post.findUnique({
+const getPostById = async (id: string, userId: string) => {
+  const post = await prisma.post.findUnique({
     where: { id, isDeleted: false },
-    include: {
-      company: true,
-      _count: {
-        select: { likes: true, saves: true, shares: true },
-      },
-    },
-  });
-  return result;
+    include: postInclude(userId),
+  })
+
+  if (!post) return null
+
+  const { likes, ...rest } = post
+
+  return {
+    ...rest,
+    isLiked: likes.length > 0,
+    likesCount: rest._count.likes,
+  }
 };
 
 const updatePost = async (userId: string, id: string, payload: IPostUpdate) => {
@@ -64,14 +68,15 @@ const deletePost = async (userId: string, id: string) => {
   return result;
 };
 
-const toggleLike = async (userId: string, payload: { postId?: string; discussionId?: string }) => {
-  const { postId, discussionId } = payload;
+const toggleLike = async (userId: string, payload: { postId?: string; discussionId?: string; commentId?: string }) => {
+  const { postId, discussionId, commentId } = payload;
 
   const existingLike = await prisma.like.findFirst({
     where: {
       userId,
       postId: postId || null,
       discussionId: discussionId || null,
+      commentId: commentId || null,
     },
   });
 
@@ -86,6 +91,7 @@ const toggleLike = async (userId: string, payload: { postId?: string; discussion
         userId,
         postId,
         discussionId,
+        commentId,
       },
     });
     return { liked: true };
@@ -185,22 +191,13 @@ const prioritizeFollowed = <T extends { companyId: string }>(
 };
 
 const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
-  const { topic, searchTerm, page = 1, limit = 10, sortBy } = filters;
-  const skip = (page - 1) * limit;
+  const { topic, searchTerm, page = 1, limit = 10, sortBy } = filters
+  const skip = (page - 1) * limit
 
-  const whereCondition: any = {
-    isDeleted: false,
-  };
+  const whereCondition: any = { isDeleted: false }
+  if (topic) whereCondition.topic = topic
+  if (searchTerm) whereCondition.content = { contains: searchTerm, mode: 'insensitive' }
 
-  if (topic) {
-    whereCondition.topic = topic;
-  }
-
-  if (searchTerm) {
-    whereCondition.content = { contains: searchTerm, mode: "insensitive" };
-  }
-
-  // Run data fetch and total count in parallel for efficiency
   const [posts, total, followingSet] = await Promise.all([
     prisma.post.findMany({
       where: whereCondition,
@@ -211,10 +208,17 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
     }),
     prisma.post.count({ where: whereCondition }),
     getFollowingIdSet(userId),
-  ]);
+  ])
 
-  // Prioritize followed companies (skip for trending – engagement order matters more)
-  const data = prioritizeFollowed(posts, followingSet, sortBy !== "trending");
+  const prioritized = prioritizeFollowed(posts, followingSet, sortBy !== 'trending')
+
+  const data = prioritized.map(post => ({
+    ...post,
+    isLiked: post.likes.length > 0,
+    isFollowing: followingSet.has(post.companyId),
+    likesCount: post._count.likes,
+    likes: undefined, // strip raw likes array — frontend doesn't need it
+  }))
 
   return {
     data,
@@ -224,8 +228,8 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
       total,
       totalPage: Math.ceil(total / limit),
     },
-  };
-};
+  }
+}
 
 const searchPosts = async (userId: string, query: any) => {
   const { searchTerm, topic, page = 1, limit = 10, sortBy } = query;
@@ -273,6 +277,147 @@ const searchPosts = async (userId: string, query: any) => {
   };
 };
 
+const createComment = async (userId: string, payload: { content: string; postId?: string; parentId?: string }) => {
+  return await prisma.comment.create({
+    data: {
+      content: payload.content,
+      userId,
+      postId: payload.postId,
+      parentId: payload.parentId,
+    },
+  });
+};
+
+const getComments = async (userId: string, postId: string, query: { page?: number; limit?: number }) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const comments = await prisma.comment.findMany({
+    where: {
+      postId,
+      parentId: null,
+      isDeleted: false,
+    },
+    include: {
+      user: {
+        select: { id: true, name: true, picture: true },
+      },
+      _count: {
+        select: { likes: true, replies: { where: { isDeleted: false } } },
+      },
+      likes: {
+        where: { userId },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
+  });
+
+  const total = await prisma.comment.count({
+    where: { postId, parentId: null, isDeleted: false },
+  });
+
+  const data = comments.map(comment => ({
+    ...comment,
+    isLiked: comment.likes.length > 0,
+    likesCount: comment._count.likes,
+    repliesCount: comment._count.replies,
+    likes: undefined,
+  }));
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
+
+const getReplies = async (userId: string, commentId: string, query: { page?: number; limit?: number }) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const replies = await prisma.comment.findMany({
+    where: {
+      parentId: commentId,
+      isDeleted: false,
+    },
+    include: {
+      user: {
+        select: { id: true, name: true, picture: true },
+      },
+      _count: {
+        select: { likes: true },
+      },
+      likes: {
+        where: { userId },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: "asc" },
+    skip,
+    take: limit,
+  });
+
+  const total = await prisma.comment.count({
+    where: { parentId: commentId, isDeleted: false },
+  });
+
+  const data = replies.map(reply => ({
+    ...reply,
+    isLiked: reply.likes.length > 0,
+    likesCount: reply._count.likes,
+    likes: undefined,
+  }));
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
+
+const updateComment = async (userId: string, id: string, content: string) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id },
+  });
+
+  if (!comment || comment.userId !== userId) {
+    throw new Error("You are not authorized to update this comment");
+  }
+
+  return await prisma.comment.update({
+    where: { id },
+    data: { content, isEdited: true },
+  });
+};
+
+const deleteComment = async (userId: string, id: string) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id },
+  });
+
+  if (!comment || comment.userId !== userId) {
+    throw new Error("You are not authorized to delete this comment");
+  }
+
+  return await prisma.comment.update({
+    where: { id },
+    data: { isDeleted: true },
+  });
+};
+
 export const SocialService = {
   createPost,
   getPostById,
@@ -282,4 +427,9 @@ export const SocialService = {
   followCompany,
   getSocialFeed,
   searchPosts,
+  createComment,
+  getComments,
+  getReplies,
+  updateComment,
+  deleteComment,
 };

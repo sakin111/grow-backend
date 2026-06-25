@@ -29,6 +29,11 @@ router.get(
     SessionControllers.getAllBookings
 );
 
+router.get(
+    "/all",
+    checkAuth(Role.ADMIN),
+    SessionControllers.getAllBookings
+);
 
 router.get(
     "/booking/:bookingId",

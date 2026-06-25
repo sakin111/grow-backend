@@ -217,7 +217,7 @@ const createComment = async (userId: string, payload: any) => {
   });
 
 
-  if (comment.discussion.company.ownerId !== userId) {
+  if (comment.discussion && comment.discussion.company.ownerId !== userId) {
     await sendInAppNotification({
       userId: comment.discussion.company.ownerId,
       type: "NEW_COMMENT",
@@ -240,7 +240,7 @@ const updateComment = async (commentId: string, userId: string, content: string)
     throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
   }
 
-  if (comment.company.ownerId !== userId) {
+  if (comment.company?.ownerId !== userId) {
     throw new AppError(
       httpStatus.FORBIDDEN,
       "You are not authorized to update this comment"
@@ -265,7 +265,7 @@ const deleteComment = async (commentId: string, userId: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
   }
 
-  if (comment.company.ownerId !== userId) {
+  if (comment.company?.ownerId !== userId) {
     throw new AppError(
       httpStatus.FORBIDDEN,
       "You are not authorized to delete this comment"

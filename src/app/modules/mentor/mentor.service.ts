@@ -295,7 +295,36 @@ const deleteAvailability = async (userId: string, slotId: string) => {
   return deletedSlot;
 };
 
+const getAllMentors = async (query: Record<string, any>) => {
+  const mentorQuery = new QueryBuilder(prisma.mentorProfile, query)
+    .search(["bio"])
+    .filter(["isActive"])
+    .relation({
+      user: {
+        select: { id: true, name: true, email: true, picture: true },
+      },
+      availability: true,
+      reviews: {
+        include: {
+          owner: {
+            select: { id: true, name: true, picture: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      _count: {
+        select: { bookings: true, reviews: true },
+      },
+    })
+    .sort("-avgRating")
+    .paginate()
+    .fields();
 
+  const data = await mentorQuery.build();
+  const meta = await mentorQuery.getMeta();
+
+  return { meta, data };
+};
 
 const searchMentors = async (query: Record<string, any>) => {
   const mentorQuery = new QueryBuilder(prisma.mentorProfile, query)
@@ -354,5 +383,6 @@ export const MentorServices = {
   getAvailability,
   updateAvailability,
   deleteAvailability,
+  getAllMentors,
   searchMentors,
 };
