@@ -1,20 +1,19 @@
 model MentorProfile {
-  id          String   @id @default(uuid())
-  bio         String
-  expertise   String[]
-  Token       Float
-  categories  String[]
-  avgRating   Float    @default(0)
+  id         String   @id @default(uuid())
+  bio        String
+  expertise  String[]
+  Token      Float
+  categories String[]
+  avgRating  Float    @default(0)
 
   userId String @unique
 
-  user   User   @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-  availability MentorAvailability[]
-  bookings     SessionBooking[]
-  reviews      Review[]
+  availability  MentorAvailability[]
+  bookings      SessionBooking[]
+  reviews       Review[]
   videoSessions VideoSession[]
-
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -23,12 +22,12 @@ model MentorProfile {
 }
 
 model MentorAvailability {
-  id        String    @id @default(uuid())
+  id        String        @id @default(uuid())
   mentorId  String
   mentor    MentorProfile @relation(fields: [mentorId], references: [id])
   dayOfWeek DayOfWeek
-  startTime String    
-  endTime   String  
+  startTime String
+  endTime   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

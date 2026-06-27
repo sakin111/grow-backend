@@ -32,7 +32,14 @@ const getMe = CatchAsync(async (req: Request, res: Response, next: NextFunction)
 
 const updateMe = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req.user as any)?.id;
-    const user = await UserServices.updateMe(userId, req.body);
+    const payload: any = { ...req.body };
+    if (req.file) {
+        const file: any = req.file;
+        const url = file.path || file.secure_url || file.location || file.url;
+        if (url) payload.picture = url;
+    }
+
+    const user = await UserServices.updateMe(userId, payload);
 
     sendResponse(res, {
         success: true,

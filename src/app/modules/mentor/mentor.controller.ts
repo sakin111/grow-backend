@@ -146,7 +146,20 @@ const deleteAvailability = CatchAsync(
   }
 );
 
-// ===================== MENTOR SEARCH =====================
+
+const getAllMentors = CatchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await MentorServices.getAllMentors(req.query);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "All Mentors Retrieved Successfully",
+      meta: result.meta,
+      data: result.data,
+    });
+  }
+);
 
 const searchMentors = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -172,5 +185,6 @@ export const MentorControllers = {
   getAvailability,
   updateAvailability,
   deleteAvailability,
+  getAllMentors,
   searchMentors,
 };

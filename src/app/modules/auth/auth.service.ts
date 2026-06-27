@@ -150,29 +150,55 @@ const resetPassword = async (payload: Record<string, any>, decodedToken: JwtPayl
 }
 
 const verifyEmail = async (email: string, token: string) => {
-    const verificationToken = await prisma.verificationToken.findUnique({
-        where: { token }
-    });
+  const verificationToken = await prisma.verificationToken.findFirst({
+    where: { token },
+  })
 
-    if (!verificationToken || verificationToken.email !== email) {
-        throw new AppError(httpStatus.BAD_REQUEST, "Invalid token");
-    }
+  if (!verificationToken || verificationToken.email !== email) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token')
+  }
 
-    if (new Date() > verificationToken.expires) {
-        await prisma.verificationToken.delete({ where: { id: verificationToken.id } });
-        throw new AppError(httpStatus.BAD_REQUEST, "Token expired");
-    }
+  const user = await prisma.user.findUnique({
+    where: { email },
+  })
 
-    await prisma.$transaction([
-        prisma.user.update({
-            where: { email },
-            data: { emailVerified: true, emailVerifiedAt: new Date() }
-        }),
-        prisma.verificationToken.delete({ where: { id: verificationToken.id } })
-    ]);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found')
+  }
 
-    return { message: "Email verified successfully" };
-};
+  if (user.emailVerified) {
+    return { message: 'Email already verified' }
+  }
+
+  if (verificationToken.expires < new Date()) {
+    await prisma.verificationToken.delete({
+      where: { id: verificationToken.id },
+    })
+
+    throw new AppError(httpStatus.BAD_REQUEST, 'Token expired')
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { email },
+      data: {
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
+    }),
+
+    prisma.verificationToken.delete({
+      where: { id: verificationToken.id },
+    }),
+  ])
+
+  return {
+    message: 'Email verified successfully',
+  }
+}
+
+
+
 
 export const AuthServices = {
     changePassword,

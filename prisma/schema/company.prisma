@@ -1,29 +1,52 @@
-
-
 model Company {
-    id String @id @default(uuid())
-    name String
-    industry String
-    size String 
-    stage String
-    description String
-    logo        String?
+  id          String  @id @default(uuid())
+  name        String
+  industry    String
+  size        String
+  stage       String
+  description String
+  logo        String?
 
+  ownerId String @unique
+  owner   User   @relation(fields: [ownerId], references: [id])
 
-    ownerId String @unique
-    owner User @relation(fields: [ownerId], references: [id])
+  verificationStatus   VerificationStatus           @default(UNVERIFIED)
+  verificationRequests CompanyVerificationRequest[]
+  verifiedAt           DateTime?
 
-    verificationStatus VerificationStatus @default(UNVERIFIED)
-    verifiedAt         DateTime?
+  discussions Discussion[]
+  comments    Comment[]
+  posts       Post[]
+  followers   Follow[]     @relation("Following")
+  following   Follow[]     @relation("Follower")
 
-    discussions Discussion[]
-    comments    Comment[] 
-    posts       Post[]
-    followers   Follow[] @relation("Following")
-    following   Follow[] @relation("Follower")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  @@map("company")
+}
 
-    @@map("company")
+model CompanyVerificationRequest {
+  id String @id @default(uuid())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  requestedById String
+  requestedBy   User   @relation(fields: [requestedById], references: [id])
+
+  website      String?
+  contactEmail String?
+  note         String?
+
+  status VerificationStatus @default(PENDING)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("ReviewedBy", fields: [reviewedById], references: [id])
+
+  adminNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("company_verification_requests")
 }

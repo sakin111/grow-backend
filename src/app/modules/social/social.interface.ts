@@ -21,3 +21,14 @@ export interface IFeedFilter {
   page?: number;
   limit?: number;
 }
+
+export interface ICommentCreate {
+  content: string;
+  postId?: string;
+  parentId?: string;
+}
+
+export interface ICommentUpdate {
+  content?: string;
+}
+

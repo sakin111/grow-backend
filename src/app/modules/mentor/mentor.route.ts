@@ -7,6 +7,11 @@ import { Role } from "@prisma/client";
 
 const router = Router();
 
+router.get(
+  "/allMentors",
+  checkAuth(...Object.values(Role)),
+  MentorControllers.getAllMentors
+);
 
 router.get(
   "/search",

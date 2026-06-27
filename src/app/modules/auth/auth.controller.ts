@@ -10,6 +10,7 @@ import { setAuthCookie } from "../../shared/setCookie"
 import { envVar } from "../../config/envVar"
 import { AuthServices } from "./auth.service"
 import { JwtPayload } from "jsonwebtoken"
+import { prisma } from "../../lib/prisma"
 
 
 
@@ -169,9 +170,14 @@ const logout = CatchAsync(async (req: Request, res: Response, next: NextFunction
 
 
 const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
-    const { email, token } = req.query;
+    const email = (req.query.email || req.body.email) as string;
+    const token = (req.query.token || req.body.token) as string;
 
-    const result = await AuthServices.verifyEmail(email as string, token as string);
+    if (!email || !token) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Email and token are required for verification");
+    }
+
+    const result = await AuthServices.verifyEmail(email, token);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -180,6 +186,39 @@ const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
         data: null
     });
 });
+
+const checkVerificationStatus = CatchAsync(
+  async (req: Request, res: Response) => {
+    const { email } = req.query
+
+    if (!email || typeof email !== 'string') {
+      return sendResponse(res, {
+        statusCode: httpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Email is required',
+        data: { verified: false },
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        emailVerified: true,
+      },
+    })
+
+    const verified = user?.emailVerified ?? false
+
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: verified
+        ? 'Email is verified'
+        : 'Email is not verified',
+      data: { verified },
+    })
+  }
+)
 
 export const authController = {
     login,
@@ -190,5 +229,6 @@ export const authController = {
     setPassword,
     forgotPassword,
     resetPassword,
-    verifyEmail
+    verifyEmail,
+    checkVerificationStatus
 };

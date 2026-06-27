@@ -7,7 +7,7 @@ import { ICreateCompanyPayload, IUpdateCompanyPayload } from "./company.interfac
 import { QueryBuilder } from "../../shared/QueryBuilder";
 
 const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) => {
-  // Check if user already has a company
+
   const existingCompany = await prisma.company.findUnique({
     where: { ownerId },
   });
@@ -19,7 +19,6 @@ const createCompany = async (ownerId: string, payload: ICreateCompanyPayload) =>
     );
   }
 
-  // Check if user exists
   const user = await prisma.user.findUnique({
     where: { id: ownerId },
   });
@@ -53,6 +52,18 @@ const getAllCompanies = async (query: Record<string, any>) => {
           email: true,
         },
       },
+      verificationRequests: {
+        where: { status: "PENDING" },
+        select: {
+          id: true,
+          website: true,
+          contactEmail: true,
+          note: true,
+          createdAt: true,
+        },
+        take: 1,
+        orderBy: { createdAt: "desc" },
+      },
       _count: {
         select: { discussions: true, comments: true },
       },
@@ -64,11 +75,9 @@ const getAllCompanies = async (query: Record<string, any>) => {
   const data = await companyQuery.build();
   const meta = await companyQuery.getMeta();
 
-  return {
-    meta,
-    data,
-  };
+  return { meta, data };
 };
+
 
 const getSingleCompany = async (companyId: string) => {
   const company = await prisma.company.findUnique({
@@ -147,10 +156,69 @@ const deleteCompany = async (companyId: string, ownerId: string) => {
   return deletedCompany;
 };
 
+
+
+const requestVerification = async (
+  requestId: string,
+  adminId: string,
+  payload: { status: "VERIFIED" | "REJECTED"; adminNote?: string }
+) => {
+  const request = await prisma.companyVerificationRequest.findUnique({
+    where: { id: requestId },
+    include: {
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      requestedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  })
+
+  if (!request) {
+    throw new AppError(httpStatus.NOT_FOUND, "Verification request not found")
+  }
+
+  const [updatedRequest] = await prisma.$transaction([
+    prisma.companyVerificationRequest.update({
+      where: { id: requestId },
+      data: {
+        status: payload.status,
+        adminNote: payload.adminNote,
+        reviewedById: adminId,
+      },
+    }),
+    prisma.company.update({
+      where: { id: request.companyId },
+      data: {
+        verificationStatus: payload.status,
+        verifiedAt: payload.status === "VERIFIED" ? new Date() : null,
+      },
+    }),
+  ])
+
+  return {
+    ...updatedRequest,
+    website: request.website,
+    contactEmail: request.contactEmail,
+    note: request.note,
+    company: request.company,
+    requestedBy: request.requestedBy,
+  }
+}
+
 export const CompanyServices = {
   createCompany,
   getAllCompanies,
   getSingleCompany,
   updateCompany,
   deleteCompany,
+  requestVerification
 };

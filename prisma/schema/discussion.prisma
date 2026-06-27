@@ -1,41 +1,54 @@
-
 model Discussion {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  topic     Topic
+  id      String @id @default(uuid())
+  title   String
+  content String
+  topic   Topic
 
   companyId String
-  company   Company  @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
 
-  comments  Comment[]
+  comments     Comment[]
   chatMessages ChatMessage[]
-  likes     Like[]
-  saves     Save[]
-  shares    Share[]
+  likes        Like[]
+  saves        Save[]
+  shares       Share[]
 
-  isPublic Boolean @default(true)
+  isPublic  Boolean @default(true)
   isDeleted Boolean @default(false)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("discussion")
 }
 
 model Comment {
-  id           String   @id @default(uuid())
-  content      String
+  id      String @id @default(uuid())
+  content String
 
-  discussionId String
-  discussion   Discussion @relation(fields: [discussionId], references: [id])
+  discussionId String?
+  discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
-  companyId    String
-  company      Company @relation(fields: [companyId], references: [id])
+  postId String?
+  post   Post? @relation(fields: [postId], references: [id])
 
-  isEdited Boolean @default(false)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
+
+  parentId String?
+  parent   Comment? @relation("CommentToComment", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentToComment")
+
+  likes Like[]
+
+  isEdited  Boolean @default(false)
   isDeleted Boolean @default(false)
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("comment")
 }

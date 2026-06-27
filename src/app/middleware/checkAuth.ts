@@ -14,7 +14,7 @@ import { logger } from "../lib/logger";
 export const checkAuth = (...authRoles: string[]) => async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-        const accessToken = req.cookies.accessToken;
+        const accessToken = req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
 
         if (!accessToken) {
             throw new AppError(403, "No Token Recieved")
@@ -28,7 +28,7 @@ export const checkAuth = (...authRoles: string[]) => async (req: Request, res: R
         if (!isUserExist) {
             throw new AppError(httpStatus.BAD_REQUEST, "User does not exist")
         }
-       
+
         if (isUserExist.status === UserStatus.BANNED || isUserExist.status === UserStatus.SUSPENDED) {
             throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.status}`)
         }

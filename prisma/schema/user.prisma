@@ -3,52 +3,55 @@ model Auth {
   provider   Provider
   providerId String
 
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("auth")
 }
 
 model User {
-  id               String   @id @default(uuid())
-  name             String
-  email            String   @unique
-  password         String
-  role             Role     @default(OWNER)
-  picture          String?
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  role     Role    @default(OWNER)
+  picture  String?
 
-  auths            Auth[]
+  auths Auth[]
 
-  company          Company?
-  mentorProfile    MentorProfile?
+  company       Company?
+  mentorProfile MentorProfile?
 
-  bookings         SessionBooking[]
-  reviews          Review[]
-  likes            Like[]
-  saves            Save[]
-  shares           Share[]
-  videoSessions    VideoSession[]
+  bookings      SessionBooking[]
+  reviews       Review[]
+  likes         Like[]
+  saves         Save[]
+  shares        Share[]
+  videoSessions VideoSession[]
+  comments      Comment[]
 
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
 
-  emailVerified    Boolean  @default(false)
-  emailVerifiedAt  DateTime?
-   
-  status           UserStatus @default(ACTIVE) 
-  isDeleted Boolean @default(false)
+  verificationRequests         CompanyVerificationRequest[]
+  reviewedVerificationRequests CompanyVerificationRequest[] @relation("ReviewedBy")
 
-  isActive         Boolean  @default(true)
-  profileCompleted Boolean  @default(false)
+  status    UserStatus @default(ACTIVE)
+  isDeleted Boolean    @default(false)
+
+  isActive         Boolean   @default(true)
+  profileCompleted Boolean   @default(false)
   lastLoginAt      DateTime?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("user")
 }
+
 model VerificationToken {
   id        String   @id @default(uuid())
   email     String

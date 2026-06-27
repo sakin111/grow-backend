@@ -4,11 +4,16 @@ import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
 import bcrypt from "bcryptjs";
 import { envVar } from "../../config/envVar";
-import { IAuthProvider } from "./user.interface";
+import { CreateUserPayload, IAuthProvider } from "./user.interface";
 import { sendEmail } from "../../utils/sendEmail";
+import crypto from 'crypto'
 
-const createUser = async (payload: any) => {
-    const { email, password, ...rest } = payload;
+const createUser = async (payload: CreateUserPayload) => {
+    const { email, password, confirmPassword, ...rest } = payload;
+
+    if (password !== confirmPassword) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Password and confirm password do not match")
+    }
 
     const isUserExist = await prisma.user.findUnique({ where: { email } })
 
@@ -36,7 +41,13 @@ const createUser = async (payload: any) => {
         }
     })
 
-    const token = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit code or use UUID
+    await prisma.verificationToken.deleteMany({
+        where: {
+            email: user.email
+        }
+    })
+
+    const token = crypto.randomInt(100000, 999999).toString(); // 6 digit code or use UUID
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await prisma.verificationToken.create({
@@ -47,9 +58,9 @@ const createUser = async (payload: any) => {
         }
     });
 
-    const verifyLink = `${envVar.FRONTEND_URL}/verify-email?token=${token}&email=${user.email}`;
+    const verifyLink = `${envVar.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
 
-    await sendEmail({
+    void sendEmail({
         to: user.email,
         subject: "Verify your email",
         templateName: "VerifyEmail",
