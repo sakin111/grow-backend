@@ -7,7 +7,7 @@
     "test": "jest",
     "postinstall": "prisma generate --schema=./prisma/schema/schema.prisma",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node ./dist/src/server.js",
     "dev": "dotenvx run -- ts-node-dev --transpile-only ./src/server.ts"
   },
   "keywords": [],
