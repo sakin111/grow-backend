@@ -2,9 +2,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+COPY package*.json ./
+RUN npm install
+
 COPY . .
 
-RUN npm install
 RUN npx prisma generate
 RUN npm run build
 
@@ -16,13 +18,12 @@ COPY package*.json ./
 
 RUN npm install --omit=dev --ignore-scripts
 
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 ENV NODE_ENV=production
-ENV PORT=5000
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js"]
+CMD ["sh","-c","npx prisma migrate deploy && node dist/src/server.js"]
