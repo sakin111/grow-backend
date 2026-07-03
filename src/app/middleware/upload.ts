@@ -1,11 +1,11 @@
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import type { Request } from 'express';
+import CloudinaryStorage from 'multer-storage-cloudinary';
 import { Cloudinary } from '../utils/cloudinary';
 
 const storage = new CloudinaryStorage({
   cloudinary: Cloudinary,
-  params: async (req, file) => {
-    
+  params: async (req: Request, file: Express.Multer.File) => {
     const originalUrl = (req.originalUrl || '').toLowerCase();
     let folder = 'grow-backend';
     if (originalUrl.includes('/company')) folder = 'company';
