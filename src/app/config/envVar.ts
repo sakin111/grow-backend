@@ -2,7 +2,7 @@ import '@dotenvx/dotenvx/config'
 
 
 export interface EnvType {
-    ENV_PORT: number
+    PORT: number
     DATABASE_URL: string
     EXPRESS_SESSION_SECRET: string
     GOOGLE_CALLBACK_URL: string
@@ -43,7 +43,7 @@ export const envProvider = (): EnvType => {
     })
 
     return {
-        ENV_PORT: Number(process.env.ENV_PORT),
+        PORT: Number(process.env.ENV_PORT),
         DATABASE_URL: process.env.DATABASE_URL as string,
         EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
