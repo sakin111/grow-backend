@@ -35,7 +35,12 @@ export interface EnvType {
 
 
 export const envProvider = (): EnvType => {
-    const configKey: string[] = ["PORT", "DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS", "EMAIL_FROM", "REDIS_URL", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "LIVEKIT_HOST", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "LOG_LEVEL"]
+    const port = process.env.PORT || process.env.ENV_PORT
+    const configKey: string[] = ["DATABASE_URL", "EXPRESS_SESSION_SECRET", "GOOGLE_CALLBACK_URL", "GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_ID", "JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES", "JWT_REFRESH_SECRET", "JWT_REFRESH_EXPIRES", "SUPER_ADMIN_PASSWORD", "SUPER_ADMIN", "BCRYPT_SALT_ROUND", "FRONTEND_URL", "NODE_ENV", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASS", "EMAIL_FROM", "REDIS_URL", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "LIVEKIT_HOST", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "LOG_LEVEL"]
+    if (!port) {
+        throw new Error(`Missing environment variable: PORT or ENV_PORT`)
+    }
+
     configKey.forEach((key) => {
         if (!process.env[key]) {
             throw new Error(`Missing environment variable: ${key}`)
@@ -43,7 +48,7 @@ export const envProvider = (): EnvType => {
     })
 
     return {
-        PORT: Number(process.env.PORT),
+        PORT: Number(port),
         DATABASE_URL: process.env.DATABASE_URL as string,
         EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
