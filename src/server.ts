@@ -21,9 +21,9 @@ export async function StartServer() {
         setIoInstance(io);
         setupVideoNamespace(io);
 
-
-        server = httpServer.listen(process.env.ENV_PORT, () => {
-            logger.info({ port: process.env.ENV_PORT }, "Server is running")
+        const PORT = Number(process.env.PORT) || 5000;
+        server = httpServer.listen(PORT, () => {
+            logger.info({ port: PORT}, "Server is running")
         })
     } catch (error) {
         logger.fatal({ err: error }, "Error starting the server")
