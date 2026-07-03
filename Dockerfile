@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema
 RUN npm run build
 
 FROM node:20-alpine
