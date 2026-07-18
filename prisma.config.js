@@ -1,7 +1,11 @@
+require('@dotenvx/dotenvx/config');
+
 module.exports = {
-  // Point to the schema directory so Prisma loads all partial schema files
   schema: 'prisma/schema',
   migrations: {
     path: 'prisma/migrations',
+  },
+  datasources: {
+    url: process.env.DIRECT_URL,
   },
 };
