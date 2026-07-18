@@ -1,4 +1,4 @@
-import '@dotenvx/dotenvx/config'
+
 
 
 export interface EnvType {
