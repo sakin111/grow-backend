@@ -7,7 +7,6 @@ RUN npm install
 
 COPY . .
 
-RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine
@@ -27,4 +26,4 @@ ENV NODE_ENV=production
 
 EXPOSE 5000
 
-CMD ["sh","-c","npx prisma migrate deploy && node dist/src/server.js"]
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && node dist/src/server.js"]
