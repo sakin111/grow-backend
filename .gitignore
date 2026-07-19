@@ -3,3 +3,14 @@ node_modules
 .env
 .env.keys
 /dist
+
+# Test and coverage
+/coverage
+.jest-cache
+jest.config.*.backup.js
+jest.config.updated.js
+
+# IDE and OS
+.DS_Store
+.vscode/launch.json
+*.log
