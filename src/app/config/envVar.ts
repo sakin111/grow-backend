@@ -37,17 +37,17 @@ export interface EnvType {
 
 export const envProvider = (): EnvType => {
 
-    const configKey: string[] = ["PORT","DATABASE_URL","EXPRESS_SESSION_SECRET","GOOGLE_CALLBACK_URL","GOOGLE_CLIENT_SECRET","GOOGLE_CLIENT_ID","JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES","JWT_REFRESH_SECRET","JWT_REFRESH_EXPIRES","SUPER_ADMIN_PASSWORD","SUPER_ADMIN","BCRYPT_SALT_ROUND","FRONTEND_URL","NODE_ENV", "EMAIL_HOST","EMAIL_PORT","EMAIL_USER","EMAIL_PASS","EMAIL_FROM","REDIS_URL", "CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET","LIVEKIT_HOST", "LIVEKIT_API_KEY","LIVEKIT_API_SECRET","LOG_LEVEL","DIRECT_URL"]
+    const configKey: string[] = ["DATABASE_URL","EXPRESS_SESSION_SECRET","GOOGLE_CALLBACK_URL","GOOGLE_CLIENT_SECRET","GOOGLE_CLIENT_ID","JWT_ACCESS_SECRET", "JWT_ACCESS_EXPIRES","JWT_REFRESH_SECRET","JWT_REFRESH_EXPIRES","SUPER_ADMIN_PASSWORD","SUPER_ADMIN","BCRYPT_SALT_ROUND","FRONTEND_URL","NODE_ENV", "EMAIL_HOST","EMAIL_PORT","EMAIL_USER","EMAIL_PASS","EMAIL_FROM","REDIS_URL", "CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET","LIVEKIT_HOST", "LIVEKIT_API_KEY","LIVEKIT_API_SECRET","LOG_LEVEL","DIRECT_URL"]
    
 
     configKey.forEach((key) => {
-        if (!process.env[key]) {
+        if (!process.env[key] && !["PORT", "DIRECT_URL"].includes(key)) {
             throw new Error(`Missing environment variable: ${key}`)
         }
     })
 
     return {
-        PORT: Number(process.env.PORT) ,
+        PORT: Number(process.env.PORT ?? 5000) ,
         DATABASE_URL: process.env.DATABASE_URL as string,
         EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
@@ -75,7 +75,7 @@ export const envProvider = (): EnvType => {
         LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY as string,
         LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET as string,
         LOG_LEVEL: process.env.LOG_LEVEL as string,
-        DIRECT_URL: process.env.DIRECT_URL as string,
+        DIRECT_URL: (process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "") as string,
     }
 }
 

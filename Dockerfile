@@ -24,6 +24,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 ENV NODE_ENV=production
+ENV PORT=5000
 
 EXPOSE 5000
 
