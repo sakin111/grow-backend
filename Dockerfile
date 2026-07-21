@@ -28,4 +28,4 @@ ENV PORT=5000
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js 2>&1"]
+CMD ["node", "dist/src/server.js"]
