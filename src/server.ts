@@ -9,6 +9,16 @@ import { logger } from "./app/lib/logger";
 
 
 
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err)
+  process.exit(1)
+})
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err)
+  process.exit(1)
+})
+
 let server: Server
 
 export async function StartServer() {
