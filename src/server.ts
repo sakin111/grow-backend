@@ -8,6 +8,13 @@ import { connectRedis } from "./app/lib/redis";
 import { logger } from "./app/lib/logger";
 
 
+console.log("ENV CHECK:", {
+  PORT: process.env.PORT,
+  DATABASE_URL: !!process.env.DATABASE_URL,
+  REDIS_URL: !!process.env.REDIS_URL,
+  NODE_ENV: process.env.NODE_ENV,
+})
+
 
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION:", err)
@@ -23,6 +30,18 @@ let server: Server
 
 export async function StartServer() {
     try {
+     console.log("Step 1: Connecting to database...")
+        await prisma.$connect()
+        console.log("Step 2: Database connected")
+        
+        console.log("Step 3: Connecting to Redis...")
+        try {
+            await connectRedis()
+        } catch (err) {
+            console.error("Redis failed but continuing:", err)
+        }
+        console.log("Step 4: Redis done")
+
         await prisma.$connect()
         logger.info("Database connected successfully")
         await connectRedis()
