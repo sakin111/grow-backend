@@ -3,13 +3,14 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-COPY prisma ./prisma/
-
-# Install all dependencies and generate Prisma Client
+# 1. Install dependencies first (leverages Docker cache)
 RUN npm install
-RUN npx prisma generate
 
+# 2. Copy ALL code into the container (including your prisma directory)
 COPY . .
+
+# 3. Generate Prisma client NOW that files are present
+RUN npx prisma generate
 RUN npm run build
 
 # --- Production Stage ---
@@ -18,7 +19,6 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-# Install ONLY production dependencies, but ALLOW scripts to run so Prisma sets up
 RUN npm install --omit=dev
 
 # Copy generated Prisma Client and build files from builder
