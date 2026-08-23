@@ -109,8 +109,8 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
-    "types": ["jest", "node"],                           /* Include Jest and Node type definitions */
+    "types": ["node"],                           /* Include Jest and Node type definitions */
     "isolatedModules": true                              /* Ensure each file can be safely transpiled without relying on other imports. */
   },
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }
