@@ -25,7 +25,12 @@ RUN npm install --omit=dev
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=builder /app/dist ./dist
+
+# CRITICAL FIX: Copy the entire prisma folder so schema.prisma is available at runtime
 COPY --from=builder /app/prisma ./prisma
+
+# If you use a Prisma configuration file, copy it as well
+COPY --from=builder /app/prisma.config.js ./prisma.config.js
 
 ENV NODE_ENV=production
 EXPOSE 5000
