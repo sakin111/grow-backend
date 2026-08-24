@@ -30,7 +30,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 # If you use a Prisma configuration file, copy it as well
-COPY --from=builder /app/prisma.config.js ./prisma.config.js
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 ENV NODE_ENV=production
 EXPOSE 5000
