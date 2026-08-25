@@ -2,12 +2,7 @@
 
 export default defineConfig({
   schema: 'prisma/schema',
-
   migrations: {
     path: 'prisma/migrations',
-  },
-
-  datasource: {
-    url: process.env.DATABASE_URL! || process.env.DIRECT_URL!,
   },
 });
