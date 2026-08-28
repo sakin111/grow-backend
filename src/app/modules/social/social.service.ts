@@ -72,31 +72,24 @@ const toggleLike = async (userId: string, payload: { postId?: string; discussion
   const { postId, discussionId, commentId } = payload;
 
   const existingLike = await prisma.like.findFirst({
-    where: {
-      userId,
-      postId: postId || null,
-      discussionId: discussionId || null,
-      commentId: commentId || null,
-    },
+    where: { userId, postId: postId || null, discussionId: discussionId || null, commentId: commentId || null },
   });
 
   if (existingLike) {
-    await prisma.like.delete({
-      where: { id: existingLike.id },
-    });
+    await prisma.like.delete({ where: { id: existingLike.id } });
+    if (postId) {
+      await prisma.post.update({ where: { id: postId }, data: { likesCount: { decrement: 1 } } });
+    }
     return { liked: false };
   } else {
-    await prisma.like.create({
-      data: {
-        userId,
-        postId,
-        discussionId,
-        commentId,
-      },
-    });
+    await prisma.like.create({ data: { userId, postId, discussionId, commentId } });
+    if (postId) {
+      await prisma.post.update({ where: { id: postId }, data: { likesCount: { increment: 1 } } });
+    }
     return { liked: true };
   }
 };
+
 
 const followCompany = async (followerUserId: string, followingId: string) => {
   const followerCompany = await prisma.company.findUnique({
@@ -138,38 +131,30 @@ const followCompany = async (followerUserId: string, followingId: string) => {
 
 
 const getFollowingIdSet = async (userId: string): Promise<Set<string>> => {
-  const userCompany = await prisma.company.findUnique({
-    where: { ownerId: userId },
-    select: { id: true },
-  });
-
-  if (!userCompany) return new Set();
-
   const following = await prisma.follow.findMany({
-    where: { followerId: userCompany.id },
+    where: { follower: { ownerId: userId } },
     select: { followingId: true },
   });
-
   return new Set(following.map((f) => f.followingId));
 };
 
 
 const postInclude = (userId: string) => ({
-  company: true,
-  _count: {
-    select: { likes: true, saves: true, shares: true },
+  company: {
+    select: {
+      id: true,
+      name: true,
+      logo: true,
+      verificationStatus: true, 
+    },
   },
-  likes: {
-    where: { userId },
-    take: 1,
-  },
+  _count: { select: { likes: true, saves: true, shares: true } },
+  likes: { where: { userId }, take: 1 },
 });
 
 
 const postOrderBy = (sortBy?: string) =>
-  sortBy === "trending"
-    ? { likes: { _count: "desc" as const } }
-    : { createdAt: "desc" as const };
+sortBy === "trending" ? { likesCount: "desc" as const } : { createdAt: "desc" as const };
 
 
 const prioritizeFollowed = <T extends { companyId: string }>(
@@ -217,7 +202,7 @@ const getSocialFeed = async (userId: string, filters: IFeedFilter) => {
     isLiked: post.likes.length > 0,
     isFollowing: followingSet.has(post.companyId),
     likesCount: post._count.likes,
-    likes: undefined, // strip raw likes array — frontend doesn't need it
+    likes: undefined,
   }))
 
   return {

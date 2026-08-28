@@ -50,5 +50,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([postId, parentId, isDeleted])
+  @@index([userId])
   @@map("comment")
+
 }

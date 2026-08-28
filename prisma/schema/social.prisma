@@ -11,11 +11,17 @@ model Post {
   saves  Save[]
   shares Share[]
   comments Comment[]
+  likesCount Int @default(0)
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
 
+  @@index([likesCount])
+  @@index([isDeleted, createdAt])
+  @@index([companyId])
+  @@index([topic])
   @@map("post")
 }
 
@@ -34,7 +40,9 @@ model Like {
   comment   Comment? @relation(fields: [commentId], references: [id])
 
   createdAt DateTime @default(now())
-
+  
+  @@index([postId])
+  @@index([userId])
   @@unique([userId, postId])
   @@unique([userId, discussionId])
   @@unique([userId, commentId])
