@@ -11,6 +11,7 @@ model Post {
   saves  Save[]
   shares Share[]
   comments Comment[]
+  
   likesCount Int @default(0)
 
   isDeleted Boolean  @default(false)
