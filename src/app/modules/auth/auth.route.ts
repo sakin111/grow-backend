@@ -38,6 +38,7 @@ router.get("/google", (req: Request, res: Response, next: NextFunction) => {
 })
 
 router.get("/google/callback", passport.authenticate("google", { failureRedirect: `${envVar.FRONTEND_URL}/login?error=There is some issues with your account. Please contact with out support team!` }), authController.GoogleLogin)
+router.post("/google/exchange", authController.exchangeGoogleAuthCode)
 
 
 export const authRouter = router

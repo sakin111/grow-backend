@@ -11,6 +11,7 @@ import { envVar } from "../../config/envVar"
 import { AuthServices } from "./auth.service"
 import { JwtPayload } from "jsonwebtoken"
 import { prisma } from "../../lib/prisma"
+import { consumeGoogleAuthCode, createGoogleAuthCode } from "../../shared/googleAuthCode"
 
 
 
@@ -61,15 +62,39 @@ const GoogleLogin = CatchAsync(async (req: Request, res: Response, next: NextFun
         return next(new AppError(401, "Authentication failed"))
     }
 
-    const userToken = await createUserTokens(user)
+    const frontendUrl = new URL(envVar.FRONTEND_URL)
+    const redirectUrl = new URL(redirectTo || "/", frontendUrl)
 
-    const { password: pass, ...rest } = user
+    if (redirectUrl.origin !== frontendUrl.origin) {
+        return next(new AppError(httpStatus.BAD_REQUEST, "Invalid Google login redirect"))
+    }
 
-    setAuthCookie(res, userToken)
+    const tokens = await createUserTokens(user)
+    const code = await createGoogleAuthCode(tokens)
+    redirectUrl.searchParams.set("code", code)
+    res.setHeader("Cache-Control", "no-store")
+    res.setHeader("Referrer-Policy", "no-referrer")
+    logger.info({ redirectUrl: `${redirectUrl.origin}${redirectUrl.pathname}` }, "Google login redirect")
+    res.redirect(redirectUrl.toString())
+})
 
-    const redirectUrl = `${envVar.FRONTEND_URL}/${redirectTo}`
-    logger.info({ redirectUrl }, "Google login redirect")
-    res.redirect(redirectUrl)
+const exchangeGoogleAuthCode = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { code } = req.body
+    if (typeof code !== "string" || !code) {
+        return next(new AppError(httpStatus.BAD_REQUEST, "Google authentication code is required"))
+    }
+
+    const tokens = await consumeGoogleAuthCode(code)
+    if (!tokens) {
+        return next(new AppError(httpStatus.UNAUTHORIZED, "Google authentication code is invalid or expired"))
+    }
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Google authentication code exchanged",
+        data: tokens
+    })
 })
 
 
@@ -223,6 +248,7 @@ const checkVerificationStatus = CatchAsync(
 export const authController = {
     login,
     GoogleLogin,
+    exchangeGoogleAuthCode,
     getAccessToken,
     logout,
     changePassword,
