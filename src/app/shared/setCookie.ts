@@ -8,7 +8,7 @@ export interface AuthTokens {
 
 const cookieOptions = {
     httpOnly: true,
-    sameSite: "none" as const,
+    sameSite: "lax" as const,
     secure: envVar.NODE_ENV === "production",
     path: "/",
 }
