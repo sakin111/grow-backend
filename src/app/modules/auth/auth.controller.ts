@@ -89,11 +89,12 @@ const exchangeGoogleAuthCode = CatchAsync(async (req: Request, res: Response, ne
         return next(new AppError(httpStatus.UNAUTHORIZED, "Google authentication code is invalid or expired"))
     }
 
+    setAuthCookie(res, tokens)
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Google authentication code exchanged",
-        data: tokens
+        data: null
     })
 })
 
@@ -106,6 +107,7 @@ const getAccessToken = CatchAsync(async (req: Request, res: Response, next: Next
         return next(new AppError(httpStatus.BAD_REQUEST, "Refresh token is required"))
     }
     const newAccessToken = await createNewAccessTokenWithRefreshToken(refreshToken)
+    setAuthCookie(res, { accessToken: newAccessToken })
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

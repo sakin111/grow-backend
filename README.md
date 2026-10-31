@@ -85,13 +85,39 @@ grow-backend/
 └── Dockerfile                # Docker build configuration
 ```
 
-## Authentication Flow
+## Google Sign-In (Frontend Integration)
 
-1. **Login/Register**: User sends credentials or Google OAuth token
-2. **Verification**: Credentials verified against database
-3. **JWT Generation**: JWT token issued with user roles and company info
-4. **Session**: Session stored using session ID
-5. **Subsequent Requests**: JWT token in Authorization header
+The Google sign-in flow uses a short-lived, single-use authorization code. The backend exchanges that code for HttpOnly authentication cookies; the frontend should not store JWTs in local storage.
+
+1. Redirect the browser to `GET /api/v1/auth/google?redirect=/login/google-callback`. The `redirect` value must be a path on the configured frontend origin.
+2. After Google authentication, the backend redirects to that frontend path with `?code=...`.
+3. Read the `code` query parameter and immediately remove it from the address bar. Exchange it with:
+
+   ```http
+   POST /api/v1/auth/google/exchange
+   Content-Type: application/json
+   ```
+
+   ```json
+   { "code": "one-time-code-from-the-redirect" }
+   ```
+
+   Include credentials in browser requests (`credentials: "include"` for `fetch`, or `withCredentials: true` for Axios). On success, the response is:
+
+   ```json
+   {
+     "success": true,
+     "message": "Google authentication code exchanged",
+     "data": null
+   }
+   ```
+
+   The response sets `accessToken` and `refreshToken` as HttpOnly cookies. The code expires after 60 seconds and can only be exchanged once. Missing or expired codes return `401`.
+4. Load the signed-in user from `GET /api/v1/user/me`, also including credentials. Authentication cookies are sent automatically.
+5. To refresh the access cookie, call `POST /api/v1/auth/refresh-token` with credentials and no request body. The response includes a new `data.accessToken` and updates the HttpOnly access cookie.
+6. To sign out, call `POST /api/v1/auth/logout` with credentials.
+
+The backend permits credentialed requests only from the configured `FRONTEND_URL`. The callback destination is restricted to that same origin.
 
 ## Environment Variables
 
@@ -160,8 +186,10 @@ POST /api/v1/auth/login
 **Google Login**
 
 ```
-GET /api/v1/auth/google?redirect=/profile
+GET /api/v1/auth/google?redirect=/login/google-callback
 ```
+
+After Google sign-in, exchange the returned `code` using `POST /api/v1/auth/google/exchange` as described in [Google Sign-In (Frontend Integration)](#google-sign-in-frontend-integration).
 
 ### Users
 
