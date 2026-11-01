@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response, Router } from "express";
+import { Role } from "@prisma/client";
 import { authController } from "./auth.controller";
 import passport from "passport";
 import { envVar } from "../../config/envVar";
 import { checkAuth } from "../../middleware/checkAuth";
-import { Role } from "@prisma/client";
+
 import { validateRequest } from "../../middleware/validateRequest";
 import { AuthValidation } from "./auth.validation";
 
@@ -23,9 +24,9 @@ router.get("/check-verification-status", authController.checkVerificationStatus)
 
 router.post("/refresh-token", authController.getAccessToken)
 
-router.post("/change-password", checkAuth(...Object.values(Role) as string[]), authController.changePassword)
+router.post("/change-password", checkAuth(Role.OWNER, Role.ADMIN, Role.MENTOR), authController.changePassword)
 
-router.post("/set-password", checkAuth(...Object.values(Role) as string[]), authController.setPassword)
+router.post("/set-password", checkAuth(Role.OWNER, Role.ADMIN, Role.MENTOR), authController.setPassword)
 
 router.post("/forgot-password", validateRequest(AuthValidation.forgotPasswordValidationSchema), authController.forgotPassword)
 
