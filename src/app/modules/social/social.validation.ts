@@ -1,10 +1,23 @@
 import { z } from "zod";
 import { Topic } from "@prisma/client";
+import { envVar } from "../../config/envVar";
 
 const createPost = z.object({
   body: z.object({
     content: z.string({ error: "Content is required" }),
-    topic: z.enum(Topic, { error: "Topic is required" }),
+    companyId: z.string().min(1, "Company ID is required"),
+    image: z
+      .string()
+      .url("Image must be a valid URL")
+      .refine(
+        (url) =>
+          url.startsWith(
+            `https://res.cloudinary.com/${envVar.CLOUDINARY_CLOUD_NAME}/`
+          ),
+        "Image URL must be hosted in this Cloudinary account"
+      )
+      .optional(),
+    topic: z.enum(Topic).optional(),
   }),
 });
 

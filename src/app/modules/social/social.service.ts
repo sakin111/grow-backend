@@ -1,5 +1,10 @@
 import { prisma } from "../../lib/prisma";
 import { IPostCreate, IPostUpdate, IFeedFilter } from "./social.interface";
+import AppError from "../../errorHelper/AppError";
+import httpStatus from "http-status";
+import { Topic } from "@prisma/client";
+import { envVar } from "../../config/envVar";
+import { Cloudinary } from "../../utils/cloudinary";
 
 
 const createPost = async (userId: string, payload: IPostCreate) => {
@@ -8,13 +13,35 @@ const createPost = async (userId: string, payload: IPostCreate) => {
   });
 
   if (!company || company.ownerId !== userId) {
-    throw new Error("You are not authorized to post for this company");
+    throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to post for this company");
   }
 
   const result = await prisma.post.create({
-    data: payload,
+    data: {
+      companyId: payload.companyId,
+      content: payload.content,
+      image: payload.image,
+      topic: payload.topic ?? Topic.GENERAL,
+    },
   });
   return result;
+};
+
+const getUploadSignature = () => {
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = "posts";
+  const signature = Cloudinary.utils.api_sign_request(
+    { timestamp, folder },
+    envVar.CLOUDINARY_API_SECRET
+  );
+
+  return {
+    timestamp,
+    folder,
+    signature,
+    apiKey: envVar.CLOUDINARY_API_KEY,
+    cloudName: envVar.CLOUDINARY_CLOUD_NAME,
+  };
 };
 
 const getPostById = async (id: string, userId: string) => {
@@ -405,6 +432,7 @@ const deleteComment = async (userId: string, id: string) => {
 
 export const SocialService = {
   createPost,
+  getUploadSignature,
   getPostById,
   updatePost,
   deletePost,

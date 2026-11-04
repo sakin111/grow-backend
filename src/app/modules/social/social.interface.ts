@@ -3,7 +3,7 @@ import { Topic } from "@prisma/client";
 export interface IPostCreate {
   content: string;
   image?: string;
-  topic: Topic;
+  topic?: Topic;
   companyId: string;
 }
 
@@ -31,4 +31,3 @@ export interface ICommentCreate {
 export interface ICommentUpdate {
   content?: string;
 }
-

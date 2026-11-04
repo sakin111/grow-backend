@@ -8,18 +8,28 @@ import AppError from "../../errorHelper/AppError";
 
 const createPost = CatchAsync(async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-    const payload: any = { ...req.body }
+  const payload: any = { ...req.body };
 
   if (req.file) {
-    const file: any = req.file
-    const url = file.path || file.secure_url || file.location || file.url
-    if (url) payload.image = url
+    const file: any = req.file;
+    const url = file.path || file.secure_url || file.location || file.url;
+    if (url) payload.image = url;
   }
   const result = await SocialService.createPost(userId, payload);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
     message: "Post created successfully",
+    data: result,
+  });
+});
+
+const getUploadSignature = CatchAsync(async (_req: Request, res: Response) => {
+  const result = SocialService.getUploadSignature();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Cloudinary upload signature generated successfully",
     data: result,
   });
 });
@@ -175,6 +185,7 @@ const deleteComment = CatchAsync(async (req: Request, res: Response) => {
 
 export const SocialController = {
   createPost,
+  getUploadSignature,
   getPostById,
   updatePost,
   deletePost,

@@ -10,10 +10,16 @@ const router = Router();
 
 router.get("/feed", checkAuth(Role.OWNER, Role.MENTOR, Role.ADMIN), SocialController.getSocialFeed);
 
+router.get(
+  "/upload-signature",
+  checkAuth(Role.OWNER),
+  SocialController.getUploadSignature
+);
+
 router.post(
   "/post",
   checkAuth(Role.OWNER),
-  upload.single('image'),
+  upload.single("image"),
   validateRequest(SocialValidation.createPost),
   SocialController.createPost
 );
