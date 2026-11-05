@@ -31,6 +31,18 @@ const updateUserStatus = CatchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteUser = CatchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params as any;
+  const result = await AdminServices.deleteUser(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
+
 const getAllCompanies = CatchAsync(async (req: Request, res: Response) => {
   const result = await AdminServices.getAllCompanies(req.query);
 
@@ -60,6 +72,7 @@ const reviewVerification = CatchAsync(async (req: Request, res: Response) => {
 export const AdminControllers = {
   getAllUsers,
   updateUserStatus,
+  deleteUser,
   getAllCompanies,
   reviewVerification,
 };

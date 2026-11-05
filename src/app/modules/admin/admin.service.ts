@@ -43,6 +43,32 @@ const updateUserStatus = async (userId: string, status: UserStatus) => {
   return updatedUser;
 };
 
+const deleteUser = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      isDeleted: true,
+      isActive: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      isDeleted: true,
+      isActive: true,
+    },
+  });
+};
+
 const getAllCompanies = async (query: Record<string, any>) => {
   const companyQuery = new QueryBuilder(prisma.company, query)
     .search(["name", "description"])
@@ -109,8 +135,8 @@ const reviewVerification = async (
 export const AdminServices = {
   getAllUsers,
   updateUserStatus,
+  deleteUser,
   getAllCompanies,
   reviewVerification,
 };
   
-

@@ -33,4 +33,10 @@ router.patch(
   validateRequest(AdminValidation.updateUserStatusValidationSchema),
   AdminControllers.updateUserStatus
 );
+
+router.delete(
+  "/users/:userId",
+  checkAuth(Role.ADMIN),
+  AdminControllers.deleteUser
+);
 export const adminRouter = router;
