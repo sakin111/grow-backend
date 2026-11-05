@@ -19,6 +19,9 @@ import { swaggerSpec } from './app/config/swagger'
 
 export const app: Application = express()
 
+// Render sits one proxy hop in front of the app and forwards the client IP.
+app.set('trust proxy', 1)
+
 // Security Headers
 app.use(helmet())
 
