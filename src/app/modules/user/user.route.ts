@@ -12,6 +12,7 @@ const router = Router()
 router.post("/createUser", validate(UserValidation.createUserSchema), UserControllers.createUser)
 router.get("/me", checkAuth(...Object.values(Role)), UserControllers.getMe)
 router.patch("/me", checkAuth(...Object.values(Role)), upload.single('picture'), UserControllers.updateMe)
+router.delete("/me", checkAuth(...Object.values(Role)), UserControllers.deleteMe)
 router.patch("/role", checkAuth(...Object.values(Role)), UserControllers.updateRole)
 
 export const userRouter = router

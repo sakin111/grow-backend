@@ -2,6 +2,13 @@ import request from 'supertest';
 import { app } from '../../src/app';
 
 describe('User Module', () => {
+  describe('DELETE /api/v1/user/me', () => {
+    it('should require authentication', async () => {
+      const res = await request(app).delete('/api/v1/user/me');
+      expect(res.statusCode).toEqual(403);
+    });
+  });
+
   describe('GET /api/v1/users/profile', () => {
     it('should require authentication', async () => {
       const res = await request(app).get('/api/v1/users/profile');

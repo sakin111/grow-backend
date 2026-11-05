@@ -49,6 +49,18 @@ const updateMe = CatchAsync(async (req: Request, res: Response, next: NextFuncti
     });
 });
 
+const deleteMe = CatchAsync(async (req: Request, res: Response) => {
+    const userId = (req.user as any)?.id;
+    await UserServices.deleteMe(userId);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "User Account Deleted Successfully",
+        data: null,
+    });
+});
+
 
 const updateRole = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req.user as any)?.id;
@@ -68,5 +80,6 @@ export const UserControllers = {
     createUser,
     getMe,
     updateMe,
+    deleteMe,
     updateRole
 }

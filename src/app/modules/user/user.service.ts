@@ -103,6 +103,16 @@ const updateMe = async (userId: string, payload: any) => {
     return user;
 };
 
+const deleteMe = async (userId: string) => {
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            isDeleted: true,
+            isActive: false
+        }
+    });
+};
+
 
 const updateRole = async (userId: string, role: any) => {
     const user = await prisma.user.update({
@@ -118,5 +128,6 @@ export const UserServices = {
     createUser,
     getMe,
     updateMe,
+    deleteMe,
     updateRole
 }
