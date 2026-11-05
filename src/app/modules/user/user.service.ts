@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { envVar } from "../../config/envVar";
 import { CreateUserPayload, IAuthProvider } from "./user.interface";
 import { sendEmail } from "../../utils/sendEmail";
+import { logger } from "../../lib/logger";
 import crypto from 'crypto'
 
 const createUser = async (payload: CreateUserPayload) => {
@@ -68,6 +69,8 @@ const createUser = async (payload: CreateUserPayload) => {
             name: user.name,
             verifyLink,
         }
+    }).catch((error: unknown) => {
+        logger.warn({ err: error }, "Verification email could not be sent; user account was created");
     });
 
     return user
