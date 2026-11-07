@@ -136,7 +136,26 @@ JWT_ACCESS_SECRET="your_jwt_access_secret"
 JWT_REFRESH_SECRET="your_jwt_refresh_secret"
 JWT_ACCESS_EXPIRES_IN="1d"
 JWT_REFRESH_EXPIRES_IN="30d"
+RESEND_API_KEY="re_your_resend_api_key"
+EMAIL_FROM="GROW <verified-sender@your-domain.com>"
 ```
+
+Email delivery uses [Resend](https://resend.com/). Configure a Resend API key and a sender address on a verified domain.
+
+### Resend email verification
+
+If a new user's verification email does not arrive, the frontend can show a **Resend verification email** button that calls:
+
+```http
+POST /api/v1/auth/resend-verification-email
+Content-Type: application/json
+```
+
+```json
+{ "email": "user@example.com" }
+```
+
+The endpoint returns a generic success message to avoid revealing whether an email belongs to an account. For an existing, unverified account, it replaces the previous verification token and sends a fresh email. The verification link expires after 24 hours.
 
 ## Build & Run Instructions
 

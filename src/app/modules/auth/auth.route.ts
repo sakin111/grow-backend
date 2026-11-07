@@ -20,6 +20,7 @@ router.post("/logout", authController.logout)
 
 router.get("/verify-email", authController.verifyEmail)
 router.post("/verify-email", authController.verifyEmail)
+router.post("/resend-verification-email", validateRequest(AuthValidation.resendVerificationEmailValidationSchema), authController.resendVerificationEmail)
 router.get("/check-verification-status", authController.checkVerificationStatus)
 
 router.post("/refresh-token", authController.getAccessToken)

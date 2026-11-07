@@ -5,9 +5,8 @@ import httpStatus from "http-status";
 import bcrypt from "bcryptjs";
 import { envVar } from "../../config/envVar";
 import { CreateUserPayload, IAuthProvider } from "./user.interface";
-import { sendEmail } from "../../utils/sendEmail";
+import { sendVerificationEmail } from "../../utils/verificationEmail";
 import { logger } from "../../lib/logger";
-import crypto from 'crypto'
 
 const createUser = async (payload: CreateUserPayload) => {
     const { email, password, confirmPassword, ...rest } = payload;
@@ -42,34 +41,7 @@ const createUser = async (payload: CreateUserPayload) => {
         }
     })
 
-    await prisma.verificationToken.deleteMany({
-        where: {
-            email: user.email
-        }
-    })
-
-    const token = crypto.randomInt(100000, 999999).toString(); // 6 digit code or use UUID
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    await prisma.verificationToken.create({
-        data: {
-            email: user.email,
-            token,
-            expires,
-        }
-    });
-
-    const verifyLink = `${envVar.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
-
-    void sendEmail({
-        to: user.email,
-        subject: "Verify your email",
-        templateName: "VerifyEmail",
-        templateData: {
-            name: user.name,
-            verifyLink,
-        }
-    }).catch((error: unknown) => {
+    void sendVerificationEmail(user.email, user.name).catch((error: unknown) => {
         logger.warn({ err: error }, "Verification email could not be sent; user account was created");
     });
 

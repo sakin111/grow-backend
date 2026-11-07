@@ -44,12 +44,6 @@ describe('Environment Variables', () => {
       if (originalPort) process.env.PORT = originalPort;
     });
 
-    it('should provide EMAIL_PORT as number', () => {
-      const env = envProvider();
-      expect(typeof env.EMAIL_PORT).toBe('number');
-      expect(env.EMAIL_PORT).toBeGreaterThan(0);
-    });
-
     it('should provide all JWT configuration', () => {
       const env = envProvider();
       expect(env.JWT_ACCESS_SECRET).toBeDefined();
@@ -58,13 +52,10 @@ describe('Environment Variables', () => {
       expect(env.JWT_REFRESH_EXPIRES).toBeDefined();
     });
 
-    it('should provide all email configuration', () => {
+    it('should provide Resend email configuration', () => {
       const env = envProvider();
-      expect(env.EMAIL_HOST).toBeDefined();
-      expect(env.EMAIL_USER).toBeDefined();
-      expect(env.EMAIL_PASS).toBeDefined();
+      expect(env.RESEND_API_KEY).toBeDefined();
       expect(env.EMAIL_FROM).toBeDefined();
-      expect(env.EMAIL_PORT).toBeGreaterThan(0);
     });
 
     it('should provide all Google OAuth configuration', () => {
@@ -226,11 +217,6 @@ describe('Environment Variables', () => {
       expect(typeof env.PORT).toBe('number');
     });
 
-    it('should have EMAIL_PORT as number type', () => {
-      const env = envProvider();
-      expect(typeof env.EMAIL_PORT).toBe('number');
-    });
-
     it('should have all string configs as string type', () => {
       const env = envProvider();
       expect(typeof env.DATABASE_URL).toBe('string');
@@ -305,10 +291,7 @@ describe('Environment Variables', () => {
       'BCRYPT_SALT_ROUND',
       'FRONTEND_URL',
       'NODE_ENV',
-      'EMAIL_HOST',
-      'EMAIL_PORT',
-      'EMAIL_USER',
-      'EMAIL_PASS',
+      'RESEND_API_KEY',
       'EMAIL_FROM',
       'REDIS_URL',
       'CLOUDINARY_CLOUD_NAME',
@@ -365,9 +348,7 @@ describe('Environment Variables', () => {
 
     it('should have valid email configuration', () => {
       const env = envProvider();
-      expect(env.EMAIL_HOST).toBeDefined();
-      expect(env.EMAIL_PORT).toBeGreaterThan(0);
-      expect(env.EMAIL_USER).toBeDefined();
+      expect(env.RESEND_API_KEY).toBeDefined();
       expect(env.EMAIL_FROM).toMatch(/@/);
     });
 

@@ -8,6 +8,7 @@ import { UserStatus } from "@prisma/client";
 import jwt from "jsonwebtoken"
 import { sendEmail } from "../../utils/sendEmail";
 import bcryptjs from "bcryptjs"
+import { sendVerificationEmail } from "../../utils/verificationEmail"
 
 
 const changePassword = async (decodedToken: JwtPayload, currentPassword: string, newPassword: string) => {
@@ -197,6 +198,26 @@ const verifyEmail = async (email: string, token: string) => {
   }
 }
 
+const resendVerificationEmail = async (email: string) => {
+    const user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+            email: true,
+            name: true,
+            emailVerified: true,
+            isDeleted: true,
+        }
+    })
+
+    if (user && !user.emailVerified && !user.isDeleted) {
+        await sendVerificationEmail(user.email, user.name)
+    }
+
+    return {
+        message: "If an unverified account exists for this email, a verification email has been sent"
+    }
+}
+
 
 
 
@@ -205,6 +226,6 @@ export const AuthServices = {
     setPassword,
     forgotPassword,
     resetPassword,
-    verifyEmail
+    verifyEmail,
+    resendVerificationEmail
 };
-

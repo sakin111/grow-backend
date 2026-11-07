@@ -214,6 +214,17 @@ const verifyEmail = CatchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const resendVerificationEmail = CatchAsync(async (req: Request, res: Response) => {
+    const result = await AuthServices.resendVerificationEmail(req.body.email)
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    })
+})
+
 const checkVerificationStatus = CatchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.query
@@ -258,5 +269,6 @@ export const authController = {
     forgotPassword,
     resetPassword,
     verifyEmail,
+    resendVerificationEmail,
     checkVerificationStatus
 };
