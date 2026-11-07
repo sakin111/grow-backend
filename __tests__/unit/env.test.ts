@@ -52,10 +52,10 @@ describe('Environment Variables', () => {
       expect(env.JWT_REFRESH_EXPIRES).toBeDefined();
     });
 
-    it('should provide Resend email configuration', () => {
+    it('should provide mail API configuration', () => {
       const env = envProvider();
-      expect(env.RESEND_API_KEY).toBeDefined();
-      expect(env.EMAIL_FROM).toBeDefined();
+      expect(env.MAIL_API_URL).toBe('https://grow-roan.vercel.app');
+      expect(env.MAIL_API_SECRET).toBeDefined();
     });
 
     it('should provide all Google OAuth configuration', () => {
@@ -291,8 +291,8 @@ describe('Environment Variables', () => {
       'BCRYPT_SALT_ROUND',
       'FRONTEND_URL',
       'NODE_ENV',
-      'RESEND_API_KEY',
-      'EMAIL_FROM',
+      'MAIL_API_URL',
+      'MAIL_API_SECRET',
       'REDIS_URL',
       'CLOUDINARY_CLOUD_NAME',
       'CLOUDINARY_API_KEY',
@@ -346,10 +346,10 @@ describe('Environment Variables', () => {
       expect(env.SUPER_ADMIN_PASSWORD.length).toBeGreaterThanOrEqual(8);
     });
 
-    it('should have valid email configuration', () => {
+    it('should have valid mail API configuration', () => {
       const env = envProvider();
-      expect(env.RESEND_API_KEY).toBeDefined();
-      expect(env.EMAIL_FROM).toMatch(/@/);
+      expect(env.MAIL_API_URL).toBe('https://grow-roan.vercel.app');
+      expect(env.MAIL_API_SECRET).toBeDefined();
     });
 
     it('should have consistent Redis URL format', () => {

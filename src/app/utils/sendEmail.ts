@@ -1,7 +1,6 @@
 import AppError from "../errorHelper/AppError";
 import ejs from "ejs"
 import path from "path"
-import { Resend } from "resend"
 import { envVar } from "../config/envVar";
 import { logger } from "../lib/logger";
 
@@ -16,32 +15,32 @@ export interface IsendEmail {
         content: Buffer | string
         contentType?: string;
     }[]
-
-
 }
-
-const resend = new Resend(envVar.RESEND_API_KEY)
-
 
 export const sendEmail = async ({ to, subject, templateName, templateData, attachments }: IsendEmail) => {
     const templatePath = path.join(__dirname, `templates/${templateName}.ejs`)
     const html = await ejs.renderFile(templatePath, templateData)
-    const { data, error } = await resend.emails.send({
-        from: envVar.EMAIL_FROM,
-        to: to,
-        subject: subject,
-        html: html,
-        attachments: attachments?.map(attachment => ({
-            filename: attachment.filename,
-            content: attachment.content,
-            contentType: attachment.contentType
-        }))
-    })
 
-    if (error) {
-        logger.error({ err: error, to, subject }, "Email sending error");
-        throw new AppError(500, "Email error")
+    let response: Response
+    try {
+        response = await fetch(`${process.env.MAIL_API_URL}/api/send-email`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-mail-secret": process.env.MAIL_API_SECRET!,
+            },
+            body: JSON.stringify({ to, subject, html }),
+            signal: AbortSignal.timeout(15000),
+        })
+    } catch {
+        logger.error("Email API request failed")
+        throw new AppError(502, "Email error")
     }
 
-    logger.info({ to, subject, messageId: data?.id }, "Email sent successfully");
+    if (!response.ok) {
+        logger.error({ status: response.status }, "Email API returned an unsuccessful response")
+        throw new AppError(502, "Email error")
+    }
+
+    logger.info({ to, subject }, "Email sent successfully")
 }

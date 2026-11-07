@@ -136,13 +136,13 @@ JWT_ACCESS_SECRET="your_jwt_access_secret"
 JWT_REFRESH_SECRET="your_jwt_refresh_secret"
 JWT_ACCESS_EXPIRES_IN="1d"
 JWT_REFRESH_EXPIRES_IN="30d"
-RESEND_API_KEY="re_your_resend_api_key"
-EMAIL_FROM="GROW <verified-sender@your-domain.com>"
+MAIL_API_URL="https://grow-roan.vercel.app"
+MAIL_API_SECRET="your_mail_api_secret"
 ```
 
-Email delivery uses [Resend](https://resend.com/). Configure a Resend API key and a sender address on a verified domain.
+Email delivery is delegated to the Next.js route at `https://grow-roan.vercel.app/api/send-email`. Configure `MAIL_API_URL` and `MAIL_API_SECRET` in Render; the URL must not end with a slash, and the secret must match the route's `x-mail-secret` requirement.
 
-### Resend email verification
+### Email verification
 
 If a new user's verification email does not arrive, the frontend can show a **Resend verification email** button that calls:
 
