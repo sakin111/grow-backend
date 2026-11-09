@@ -160,58 +160,62 @@ const deleteCompany = async (companyId: string, ownerId: string) => {
 
 const requestVerification = async (
   companyId: string,
-  adminId: string,
-  payload: { status: "VERIFIED" | "REJECTED"; adminNote?: string }
+  ownerId: string,
+  payload: { website: string; contactEmail: string; note?: string }
 ) => {
-  const request = await prisma.companyVerificationRequest.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: companyId },
-    include: {
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      requestedBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
+    select: {
+      id: true,
+      ownerId: true,
+      verificationStatus: true,
     },
   })
 
-  if (!request) {
-    throw new AppError(httpStatus.NOT_FOUND, "Verification request not found")
+  if (!company) {
+    throw new AppError(httpStatus.NOT_FOUND, "Company not found")
   }
 
-  const [updatedRequest] = await prisma.$transaction([
-    prisma.companyVerificationRequest.update({
-      where: { id: companyId },
+  if (company.ownerId !== ownerId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not authorized to request verification for this company"
+    )
+  }
+
+  if (company.verificationStatus === "VERIFIED") {
+    throw new AppError(httpStatus.BAD_REQUEST, "Company is already verified")
+  }
+
+  const pendingRequest = await prisma.companyVerificationRequest.findFirst({
+    where: { companyId, status: "PENDING" },
+    select: { id: true },
+  })
+
+  if (pendingRequest) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "A verification request is already pending"
+    )
+  }
+
+  const [request] = await prisma.$transaction([
+    prisma.companyVerificationRequest.create({
       data: {
-        status: payload.status,
-        adminNote: payload.adminNote,
-        reviewedById: adminId,
+        companyId,
+        requestedById: ownerId,
+        website: payload.website,
+        contactEmail: payload.contactEmail,
+        note: payload.note,
       },
     }),
     prisma.company.update({
-      where: { id: request.companyId },
-      data: {
-        verificationStatus: payload.status,
-        verifiedAt: payload.status === "VERIFIED" ? new Date() : null,
-      },
+      where: { id: companyId },
+      data: { verificationStatus: "PENDING" },
     }),
   ])
 
-  return {
-    ...updatedRequest,
-    website: request.website,
-    contactEmail: request.contactEmail,
-    note: request.note,
-    company: request.company,
-    requestedBy: request.requestedBy,
-  }
+  return request
 }
 
 export const CompanyServices = {
