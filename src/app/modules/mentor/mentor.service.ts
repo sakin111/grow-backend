@@ -133,6 +133,28 @@ const updateMentorProfile = async (
   return updatedProfile;
 };
 
+const updateMyMentorActiveStatus = async (
+  userId: string,
+  isActive: boolean
+) => {
+  const profile = await prisma.mentorProfile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!profile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Mentor profile not found");
+  }
+
+  const updatedProfile = await prisma.mentorProfile.update({
+    where: { userId },
+    data: { isActive },
+    select: { id: true, isActive: true },
+  });
+
+  return updatedProfile;
+};
+
 const deleteMentorProfile = async (userId: string) => {
   const profile = await prisma.mentorProfile.findUnique({
     where: { userId },
@@ -320,6 +342,8 @@ const getAllMentors = async (query: Record<string, any>) => {
     .paginate()
     .fields();
 
+  mentorQuery.addWhere({ isActive: true });
+
   const data = await mentorQuery.build();
   const meta = await mentorQuery.getMeta();
 
@@ -329,7 +353,7 @@ const getAllMentors = async (query: Record<string, any>) => {
 const searchMentors = async (query: Record<string, any>) => {
   const mentorQuery = new QueryBuilder(prisma.mentorProfile, query)
     .search(["bio"])
-    .filter(["expertise", "category", "minRating", "maxRating", "minPrice", "maxPrice"])
+    .filter(["isActive", "expertise", "category", "minRating", "maxRating", "minPrice", "maxPrice"])
     .relation({
       user: {
         select: { id: true, name: true, email: true, picture: true },
@@ -342,6 +366,8 @@ const searchMentors = async (query: Record<string, any>) => {
     .sort("-avgRating")
     .paginate()
     .fields();
+
+  mentorQuery.addWhere({ isActive: true });
 
   if (query.expertise) {
     mentorQuery.addWhere({ expertise: { has: query.expertise } });
@@ -378,6 +404,7 @@ export const MentorServices = {
   getMentorProfile,
   getMyMentorProfile,
   updateMentorProfile,
+  updateMyMentorActiveStatus,
   deleteMentorProfile,
   addAvailability,
   getAvailability,

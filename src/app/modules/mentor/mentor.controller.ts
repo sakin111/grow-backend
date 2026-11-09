@@ -63,6 +63,23 @@ const updateMentorProfile = CatchAsync(
   }
 );
 
+const updateMyMentorActiveStatus = CatchAsync(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as IJwtPayload)?.id;
+    const profile = await MentorServices.updateMyMentorActiveStatus(
+      userId,
+      req.body.isActive
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Mentor active status updated successfully",
+      data: profile,
+    });
+  }
+);
+
 const deleteMentorProfile = CatchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req.user as IJwtPayload)?.id;
@@ -180,6 +197,7 @@ export const MentorControllers = {
   getMentorProfile,
   getMyMentorProfile,
   updateMentorProfile,
+  updateMyMentorActiveStatus,
   deleteMentorProfile,
   addAvailability,
   getAvailability,

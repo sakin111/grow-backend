@@ -40,6 +40,12 @@ const updateMentorProfileSchema = z.object({
   }),
 });
 
+const updateMentorActiveStatusSchema = z.object({
+  body: z.object({
+    isActive: z.boolean(),
+  }).strict(),
+});
+
 const createAvailabilitySchema = z.object({
   body: z.object({
     dayOfWeek: DayOfWeekEnum,
@@ -67,6 +73,7 @@ const updateAvailabilitySchema = z.object({
 export const MentorValidation = {
   createMentorProfileSchema,
   updateMentorProfileSchema,
+  updateMentorActiveStatusSchema,
   createAvailabilitySchema,
   updateAvailabilitySchema,
 };

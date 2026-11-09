@@ -20,6 +20,13 @@ const createBooking = async (ownerId: string, payload: ICreateBooking) => {
         throw new AppError(httpStatus.NOT_FOUND, "Mentor not found");
     }
 
+    if (!mentor.isActive) {
+        throw new AppError(
+            httpStatus.CONFLICT,
+            "Mentor is not accepting booking requests"
+        );
+    }
+
 
     if (mentor.userId === ownerId) {
         throw new AppError(
@@ -548,4 +555,3 @@ export const SessionServices = {
     joinSession,
     endSession,
 };
-

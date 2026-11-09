@@ -181,6 +181,43 @@ npm run docker-build
 
 ## API Documentation
 
+### Mentor availability
+
+Mentors can activate or deactivate their own profile:
+
+```
+PATCH /api/v1/mentor/profile/active-status
+Authorization: Bearer <mentor access token>
+Content-Type: application/json
+```
+
+```json
+{ "isActive": true }
+```
+
+`isActive` must be a boolean. The response includes the updated profile ID and
+status. This endpoint requires the `MENTOR` role and an existing mentor profile.
+Inactive profiles are omitted from mentor listings and cannot receive new
+booking requests.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "message": "Mentor active status updated successfully",
+  "data": {
+    "id": "<mentor-profile-id>",
+    "isActive": true
+  }
+}
+```
+
+The migration adds `MentorProfile.isActive` with a default of `true`, preserving
+the current visibility of existing profiles. Apply it locally with
+`npx prisma migrate dev` or in deployment with `npx prisma migrate deploy`,
+then regenerate the Prisma client with `npx prisma generate`.
+
 ### Base URL
 
 ```

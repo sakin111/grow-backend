@@ -33,6 +33,12 @@ router.get(
   MentorControllers.getMyMentorProfile
 );
 
+router.patch(
+  "/profile/active-status",
+  checkAuth(Role.MENTOR),
+  validateRequest(MentorValidation.updateMentorActiveStatusSchema),
+  MentorControllers.updateMyMentorActiveStatus
+);
 
 router.post(
   "/availability",

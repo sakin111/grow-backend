@@ -5,6 +5,7 @@ model MentorProfile {
   Token      Float
   categories String[]
   avgRating  Float    @default(0)
+  isActive   Boolean  @default(true)
 
   userId String @unique
 
