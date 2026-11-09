@@ -81,6 +81,18 @@ const getAllCompanies = async (query: Record<string, any>) => {
           email: true,
         },
       },
+      verificationRequests: {
+        where: { status: "PENDING" },
+        select: {
+          id: true,
+          website: true,
+          contactEmail: true,
+          note: true,
+          createdAt: true,
+        },
+        take: 1,
+        orderBy: { createdAt: "desc" },
+      },
     })
     .sort("-createdAt")
     .paginate()
