@@ -159,12 +159,12 @@ const deleteCompany = async (companyId: string, ownerId: string) => {
 
 
 const requestVerification = async (
-  requestId: string,
+  companyId: string,
   adminId: string,
   payload: { status: "VERIFIED" | "REJECTED"; adminNote?: string }
 ) => {
   const request = await prisma.companyVerificationRequest.findUnique({
-    where: { id: requestId },
+    where: { id: companyId },
     include: {
       company: {
         select: {
@@ -188,7 +188,7 @@ const requestVerification = async (
 
   const [updatedRequest] = await prisma.$transaction([
     prisma.companyVerificationRequest.update({
-      where: { id: requestId },
+      where: { id: companyId },
       data: {
         status: payload.status,
         adminNote: payload.adminNote,
