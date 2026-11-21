@@ -4,7 +4,7 @@ import httpStatus from "http-status";
 import { BookingStatus, SessionStatus } from "@prisma/client";
 import { ICreateBooking } from "./session.interface";
 import { sendInAppNotification } from "../notification/notification.utils";
-import { AccessToken } from "livekit-server-sdk";
+import { AccessToken, TrackSource } from "livekit-server-sdk";
 import { envVar } from "../../config/envVar";
 
 
@@ -460,7 +460,13 @@ const startSession = async (mentorUserId: string, bookingId: string) => {
         identity: mentorUserId,
         name: booking.mentor.user.name,
     });
-    at.addGrant({ roomJoin: true, room: bookingId, canPublish: true, canSubscribe: true });
+    at.addGrant({
+        roomJoin: true,
+        room: bookingId,
+        canPublish: true,
+        canPublishSources: [TrackSource.MICROPHONE, TrackSource.CAMERA],
+        canSubscribe: true,
+    });
     const token = await at.toJwt();
 
     // Create or update video session
@@ -509,7 +515,13 @@ const joinSession = async (userId: string, bookingId: string) => {
         identity: userId,
         name: user.name,
     });
-    at.addGrant({ roomJoin: true, room: bookingId, canPublish: false, canSubscribe: true });
+    at.addGrant({
+        roomJoin: true,
+        room: bookingId,
+        canPublish: true,
+        canPublishSources: [TrackSource.MICROPHONE, TrackSource.CAMERA],
+        canSubscribe: true,
+    });
     const token = await at.toJwt();
 
     return { token, serverUrl: envVar.LIVEKIT_HOST };
