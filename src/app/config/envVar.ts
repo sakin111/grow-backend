@@ -26,6 +26,11 @@ export interface EnvType {
     LIVEKIT_HOST: string
     LIVEKIT_API_KEY: string
     LIVEKIT_API_SECRET: string
+    STRIPE_SECRET_KEY?: string
+    STRIPE_WEBHOOK_SECRET?: string
+    STRIPE_CREDIT_PACK_100_PRICE_ID?: string
+    STRIPE_CREDIT_PACK_500_PRICE_ID?: string
+    STRIPE_MENTOR_MONTHLY_PRICE_ID?: string
     LOG_LEVEL: string
     DIRECT_URL:string
 }
@@ -68,6 +73,11 @@ export const envProvider = (): EnvType => {
         LIVEKIT_HOST: process.env.LIVEKIT_HOST as string,
         LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY as string,
         LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET as string,
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+        STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+        STRIPE_CREDIT_PACK_100_PRICE_ID: process.env.STRIPE_CREDIT_PACK_100_PRICE_ID,
+        STRIPE_CREDIT_PACK_500_PRICE_ID: process.env.STRIPE_CREDIT_PACK_500_PRICE_ID,
+        STRIPE_MENTOR_MONTHLY_PRICE_ID: process.env.STRIPE_MENTOR_MONTHLY_PRICE_ID,
         LOG_LEVEL: process.env.LOG_LEVEL as string,
         DIRECT_URL: (process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "") as string,
     }

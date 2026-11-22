@@ -3,7 +3,7 @@ import { Strategy as localStrategy } from "passport-local"
 import { prisma } from "../lib/prisma"
 import bcrypt from "bcryptjs"
 import { Strategy as GoogleStrategy } from "passport-google-oauth2"
-import { Role } from "@prisma/client"
+import { CreditLotSource, Role } from "@prisma/client"
 import { logger } from "../lib/logger"
 
 passport.use(new localStrategy({
@@ -71,12 +71,20 @@ passport.use(new GoogleStrategy({
                     picture: profile.photos?.[0].value as string,
                     role: Role.OWNER,
                     password: hashedPassword,
+                    creditBalance: 100,
                     auths: {
                         create: {
                             provider: "GOOGLE",
                             providerId: profile.id
                         }
-                    }
+                    },
+                    creditLots: {
+                        create: [{
+                            source: CreditLotSource.SIGNUP_BONUS,
+                            totalCredits: 100,
+                            remainingCredits: 100,
+                        }],
+                    },
                 }
             })
         }

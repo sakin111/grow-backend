@@ -6,6 +6,11 @@ import { ICreateBooking } from "./session.interface";
 import { sendInAppNotification } from "../notification/notification.utils";
 import { AccessToken, TrackSource } from "livekit-server-sdk";
 import { envVar } from "../../config/envVar";
+import {
+    chargeBookingCredits,
+    createMentorPayout,
+    refundBookingCredits,
+} from "../billing/billing.service";
 
 
 
@@ -27,6 +32,26 @@ const createBooking = async (ownerId: string, payload: ICreateBooking) => {
         );
     }
 
+    if (mentor.stripeSubscriptionStatus !== "active") {
+        throw new AppError(
+            httpStatus.CONFLICT,
+            "Mentor subscription is not active and cannot accept bookings",
+        );
+    }
+
+    if (!mentor.payoutsEnabled) {
+        throw new AppError(
+            httpStatus.CONFLICT,
+            "Mentor must finish Stripe payout onboarding before accepting bookings",
+        );
+    }
+
+    if (!Number.isSafeInteger(mentor.Token) || mentor.Token <= 0) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            "Mentor booking price must be a positive whole number of credits",
+        );
+    }
 
     if (mentor.userId === ownerId) {
         throw new AppError(
@@ -54,59 +79,66 @@ const createBooking = async (ownerId: string, payload: ICreateBooking) => {
     }
 
 
-    const conflictingBooking = await prisma.sessionBooking.findFirst({
-        where: {
-            mentorId: payload.mentorId,
-            status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
-            OR: [
-                {
-                    AND: [
-                        { startTime: { lte: startTime } },
-                        { endTime: { gt: startTime } },
-                    ],
-                },
-                {
-                    AND: [
-                        { startTime: { lt: endTime } },
-                        { endTime: { gte: endTime } },
-                    ],
-                },
-                {
-                    AND: [
-                        { startTime: { gte: startTime } },
-                        { endTime: { lte: endTime } },
-                    ],
-                },
-            ],
-        },
-    });
+    const booking = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "mentor_profile" WHERE "id" = ${payload.mentorId} FOR UPDATE`;
 
-    if (conflictingBooking) {
-        throw new AppError(
-            httpStatus.CONFLICT,
-            "This time slot conflicts with an existing booking"
-        );
-    }
-
-    const booking = await prisma.sessionBooking.create({
-        data: {
-            ownerId,
-            mentorId: payload.mentorId,
-            startTime,
-            endTime,
-        },
-        include: {
-            owner: {
-                select: { id: true, name: true, email: true, picture: true },
+        const conflictingBooking = await tx.sessionBooking.findFirst({
+            where: {
+                mentorId: payload.mentorId,
+                status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+                OR: [
+                    {
+                        AND: [
+                            { startTime: { lte: startTime } },
+                            { endTime: { gt: startTime } },
+                        ],
+                    },
+                    {
+                        AND: [
+                            { startTime: { lt: endTime } },
+                            { endTime: { gte: endTime } },
+                        ],
+                    },
+                    {
+                        AND: [
+                            { startTime: { gte: startTime } },
+                            { endTime: { lte: endTime } },
+                        ],
+                    },
+                ],
             },
-            mentor: {
-                include: {
-                    user: {
-                        select: { id: true, name: true, email: true, picture: true },
+        });
+
+        if (conflictingBooking) {
+            throw new AppError(
+                httpStatus.CONFLICT,
+                "This time slot conflicts with an existing booking"
+            );
+        }
+
+        const createdBooking = await tx.sessionBooking.create({
+            data: {
+                ownerId,
+                mentorId: payload.mentorId,
+                creditsCharged: mentor.Token,
+                startTime,
+                endTime,
+            },
+            include: {
+                owner: {
+                    select: { id: true, name: true, email: true, picture: true },
+                },
+                mentor: {
+                    include: {
+                        user: {
+                            select: { id: true, name: true, email: true, picture: true },
+                        },
                     },
                 },
             },
-        },
+        });
+        await chargeBookingCredits(tx, ownerId, createdBooking.id, mentor.Token);
+        return createdBooking;
     });
 
     await sendInAppNotification({
@@ -177,48 +209,50 @@ const confirmBooking = async (mentorUserId: string, bookingId: string) => {
 
 
 const cancelBooking = async (userId: string, bookingId: string) => {
-    const booking = await prisma.sessionBooking.findUnique({
-        where: { id: bookingId },
-        include: { mentor: true },
-    });
+    const updatedBooking = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "session_booking" WHERE "id" = ${bookingId} FOR UPDATE`;
+        const booking = await tx.sessionBooking.findUnique({
+            where: { id: bookingId },
+            include: { mentor: true },
+        });
 
-    if (!booking) {
-        throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
-    }
+        if (!booking) {
+            throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+        }
+        if (booking.ownerId !== userId && booking.mentor.userId !== userId) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                "You are not authorized to cancel this booking"
+            );
+        }
+        if (
+            booking.status === BookingStatus.COMPLETED ||
+            booking.status === BookingStatus.CANCELLED
+        ) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                `Cannot cancel a booking that is already ${booking.status}`
+            );
+        }
 
-
-    if (booking.ownerId !== userId && booking.mentor.userId !== userId) {
-        throw new AppError(
-            httpStatus.FORBIDDEN,
-            "You are not authorized to cancel this booking"
-        );
-    }
-
-    if (
-        booking.status === BookingStatus.COMPLETED ||
-        booking.status === BookingStatus.CANCELLED
-    ) {
-        throw new AppError(
-            httpStatus.BAD_REQUEST,
-            `Cannot cancel a booking that is already ${booking.status}`
-        );
-    }
-
-    const updatedBooking = await prisma.sessionBooking.update({
-        where: { id: bookingId },
-        data: { status: BookingStatus.CANCELLED },
-        include: {
-            owner: {
-                select: { id: true, name: true, email: true, picture: true },
-            },
-            mentor: {
-                include: {
-                    user: {
-                        select: { id: true, name: true, email: true, picture: true },
+        const cancelledBooking = await tx.sessionBooking.update({
+            where: { id: bookingId },
+            data: { status: BookingStatus.CANCELLED },
+            include: {
+                owner: {
+                    select: { id: true, name: true, email: true, picture: true },
+                },
+                mentor: {
+                    include: {
+                        user: {
+                            select: { id: true, name: true, email: true, picture: true },
+                        },
                     },
                 },
             },
-        },
+        });
+        await refundBookingCredits(tx, booking.ownerId, bookingId);
+        return cancelledBooking;
     });
 
     // Notify the other party
@@ -238,10 +272,14 @@ const cancelBooking = async (userId: string, bookingId: string) => {
 
 
 
-const completeBooking = async (mentorUserId: string, bookingId: string) => {
+const completeBooking = async (
+    mentorUserId: string,
+    bookingId: string,
+    completeVideoSession = false,
+) => {
     const booking = await prisma.sessionBooking.findUnique({
         where: { id: bookingId },
-        include: { mentor: true },
+        include: { mentor: true, creditAllocations: { where: { refundedAt: null } } },
     });
 
     if (!booking) {
@@ -252,7 +290,9 @@ const completeBooking = async (mentorUserId: string, bookingId: string) => {
     if (booking.mentor.userId !== mentorUserId) {
         throw new AppError(
             httpStatus.FORBIDDEN,
-            "Only the mentor can complete this booking"
+            completeVideoSession
+                ? "Only the mentor can end this session"
+                : "Only the mentor can complete this booking"
         );
     }
 
@@ -263,21 +303,56 @@ const completeBooking = async (mentorUserId: string, bookingId: string) => {
         );
     }
 
-    const updatedBooking = await prisma.sessionBooking.update({
-        where: { id: bookingId },
-        data: { status: BookingStatus.COMPLETED },
-        include: {
-            owner: {
-                select: { id: true, name: true, email: true, picture: true },
-            },
-            mentor: {
-                include: {
-                    user: {
-                        select: { id: true, name: true, email: true, picture: true },
+    const transfer = await createMentorPayout(bookingId, booking.mentorId);
+
+    const updatedBooking = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "session_booking" WHERE "id" = ${bookingId} FOR UPDATE`;
+        const currentBooking = await tx.sessionBooking.findUnique({
+            where: { id: bookingId },
+            select: { status: true },
+        });
+        if (!currentBooking || currentBooking.status !== BookingStatus.CONFIRMED) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                "Only confirmed bookings can be marked as completed",
+            );
+        }
+
+        const completedBooking = await tx.sessionBooking.update({
+            where: { id: bookingId },
+            data: { status: BookingStatus.COMPLETED },
+            include: {
+                owner: {
+                    select: { id: true, name: true, email: true, picture: true },
+                },
+                mentor: {
+                    include: {
+                        user: {
+                            select: { id: true, name: true, email: true, picture: true },
+                        },
                     },
                 },
             },
-        },
+        });
+        if (transfer) {
+            await tx.mentorPayout.upsert({
+                where: { bookingId },
+                update: {},
+                create: {
+                    bookingId,
+                    mentorId: booking.mentorId,
+                    amountCents: transfer.amountCents,
+                    stripeTransferId: transfer.id,
+                },
+            });
+        }
+        if (completeVideoSession) {
+            await tx.videoSession.update({
+                where: { bookingId },
+                data: { status: SessionStatus.COMPLETED },
+            });
+        }
+        return completedBooking;
     });
 
     return updatedBooking;
@@ -528,29 +603,7 @@ const joinSession = async (userId: string, bookingId: string) => {
 };
 
 const endSession = async (mentorUserId: string, bookingId: string) => {
-    const booking = await prisma.sessionBooking.findUnique({
-        where: { id: bookingId },
-        include: { mentor: true, videoSession: true },
-    });
-
-    if (!booking) {
-        throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
-    }
-
-    if (booking.mentor.userId !== mentorUserId) {
-        throw new AppError(httpStatus.FORBIDDEN, "Only the mentor can end this session");
-    }
-
-    await prisma.$transaction([
-        prisma.videoSession.update({
-            where: { bookingId: bookingId },
-            data: { status: SessionStatus.COMPLETED }
-        }),
-        prisma.sessionBooking.update({
-            where: { id: bookingId },
-            data: { status: BookingStatus.COMPLETED }
-        })
-    ]);
+    await completeBooking(mentorUserId, bookingId, true);
 
     return { message: "Session ended successfully" };
 };

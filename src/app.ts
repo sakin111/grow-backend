@@ -51,7 +51,14 @@ app.use(expressSession({
 
 app.use(passport.initialize())
 app.use(passport.session())
-app.use(express.json())
+app.use(express.json({
+   verify: (req, _res, buffer) => {
+      const request = req as Request
+      if (request.originalUrl.split("?")[0] === "/api/v1/billing/webhook") {
+         (req as Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer)
+      }
+   }
+}))
 app.use(cookieParser())
 
 // CORS Hardening

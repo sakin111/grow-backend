@@ -18,7 +18,7 @@ const createMentorProfileSchema = z.object({
     expertise: z
       .array(z.string().min(1))
       .min(1, "At least one expertise is required"),
-    Token: z.number().positive("Token pricing must be positive"),
+    Token: z.number().int().positive("Token pricing must be a positive whole number of credits"),
     categories: z
       .array(z.string().min(1))
       .min(1, "At least one category is required"),
@@ -32,7 +32,7 @@ const updateMentorProfileSchema = z.object({
       .array(z.string().min(1))
       .min(1, "At least one expertise is required")
       .optional(),
-    Token: z.number().positive("Token pricing must be positive").optional(),
+    Token: z.number().int().positive("Token pricing must be a positive whole number of credits").optional(),
     categories: z
       .array(z.string().min(1))
       .min(1, "At least one category is required")

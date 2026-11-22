@@ -1,16 +1,19 @@
 model SessionBooking {
-  id          String        @id @default(uuid())
-  ownerId     String
-  owner       User          @relation(fields: [ownerId], references: [id])
-  mentorId    String
-  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
-  status      BookingStatus @default(PENDING)
-  startTime   DateTime
-  endTime     DateTime
-  bookingDate DateTime      @default(now())
+  id             String        @id @default(uuid())
+  ownerId        String
+  owner          User          @relation(fields: [ownerId], references: [id])
+  mentorId       String
+  mentor         MentorProfile @relation(fields: [mentorId], references: [id])
+  status         BookingStatus @default(PENDING)
+  creditsCharged Int           @default(0)
+  startTime      DateTime
+  endTime        DateTime
+  bookingDate    DateTime      @default(now())
 
-  videoSession VideoSession?
-  review       Review?
+  videoSession      VideoSession?
+  review            Review?
+  creditAllocations BookingCreditAllocation[]
+  mentorPayout      MentorPayout?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -50,4 +53,34 @@ model Review {
   updatedAt DateTime @updatedAt
 
   @@map("review")
+}
+
+model BookingCreditAllocation {
+  id              String    @id @default(uuid())
+  bookingId       String
+  creditLotId     String
+  credits         Int
+  netRevenueCents Int
+  refundedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  booking   SessionBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  creditLot CreditLot      @relation(fields: [creditLotId], references: [id], onDelete: Restrict)
+
+  @@unique([bookingId, creditLotId])
+  @@map("booking_credit_allocation")
+}
+
+model MentorPayout {
+  id               String   @id @default(uuid())
+  bookingId        String   @unique
+  mentorId         String
+  amountCents      Int
+  stripeTransferId String   @unique
+  createdAt        DateTime @default(now())
+
+  booking SessionBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  mentor  MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@map("mentor_payout")
 }

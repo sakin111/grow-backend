@@ -45,4 +45,27 @@ describe("booking inactive mentors", () => {
     expect(findBooking).not.toHaveBeenCalled()
     expect(createBooking).not.toHaveBeenCalled()
   })
+
+  it("rejects booking requests when the mentor subscription is not active", async () => {
+    findMentor.mockResolvedValueOnce({
+      id: "mentor-profile-id",
+      userId: "mentor-user-id",
+      isActive: true,
+      Token: 10,
+      stripeSubscriptionStatus: "past_due",
+    })
+
+    await expect(
+      SessionServices.createBooking("owner-user-id", {
+        mentorId: "mentor-profile-id",
+        startTime: "2030-01-01T10:00:00.000Z",
+        endTime: "2030-01-01T11:00:00.000Z",
+      })
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "Mentor subscription is not active and cannot accept bookings",
+    })
+
+    expect(createBooking).not.toHaveBeenCalled()
+  })
 })

@@ -7,17 +7,16 @@ model Post {
   companyId String
   company   Company @relation(fields: [companyId], references: [id])
 
-  likes  Like[]
-  saves  Save[]
-  shares Share[]
+  likes    Like[]
+  saves    Save[]
+  shares   Share[]
   comments Comment[]
-  
+
   likesCount Int @default(0)
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
 
   @@index([likesCount])
   @@index([isDeleted, createdAt])
@@ -41,15 +40,14 @@ model Like {
   comment   Comment? @relation(fields: [commentId], references: [id])
 
   createdAt DateTime @default(now())
-  
-  @@index([postId])
-  @@index([userId])
+
   @@unique([userId, postId])
   @@unique([userId, discussionId])
   @@unique([userId, commentId])
+  @@index([postId])
+  @@index([userId])
   @@map("like")
 }
-
 
 model Save {
   id     String @id @default(uuid())

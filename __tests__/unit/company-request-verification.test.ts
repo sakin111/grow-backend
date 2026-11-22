@@ -1,6 +1,5 @@
 import { prisma } from "../../src/app/lib/prisma"
 import { CompanyServices } from "../../src/app/modules/company/company.service"
-import jest from "jest-mock"
 
 jest.mock("../../src/app/lib/prisma", () => ({
   prisma: {

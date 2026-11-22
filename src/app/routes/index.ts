@@ -10,6 +10,7 @@ import { reviewRouter } from "../modules/review/review.route"
 import { notificationRouter } from "../modules/notification/notification.route"
 import { SocialRoutes } from "../modules/social/social.route"
 import { uploadRouter } from "../modules/upload/upload.route"
+import { billingRouter } from "../modules/billing/billing.route"
 
 
 
@@ -59,6 +60,10 @@ const moduleRoute= [
     {
         path: "/upload",
         route: uploadRouter
+    },
+    {
+        path: "/billing",
+        route: billingRouter
     },
 
 

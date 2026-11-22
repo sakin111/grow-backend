@@ -30,16 +30,16 @@ model Comment {
   discussion   Discussion? @relation(fields: [discussionId], references: [id])
 
   postId String?
-  post   Post? @relation(fields: [postId], references: [id])
+  post   Post?   @relation(fields: [postId], references: [id])
 
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id])
 
   userId String?
-  user   User? @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
 
   parentId String?
-  parent   Comment? @relation("CommentToComment", fields: [parentId], references: [id])
+  parent   Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   replies  Comment[] @relation("CommentToComment")
 
   likes Like[]
@@ -53,5 +53,4 @@ model Comment {
   @@index([postId, parentId, isDeleted])
   @@index([userId])
   @@map("comment")
-
 }

@@ -13,25 +13,28 @@ model Auth {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  name     String
-  email    String  @unique
-  password String
-  role     Role    @default(OWNER)
-  picture  String?
+  id            String  @id @default(uuid())
+  name          String
+  email         String  @unique
+  password      String
+  role          Role    @default(OWNER)
+  picture       String?
+  creditBalance Int     @default(0)
 
   auths Auth[]
 
   company       Company?
   mentorProfile MentorProfile?
 
-  bookings      SessionBooking[]
-  reviews       Review[]
-  likes         Like[]
-  saves         Save[]
-  shares        Share[]
-  videoSessions VideoSession[]
-  comments      Comment[]
+  bookings       SessionBooking[]
+  reviews        Review[]
+  likes          Like[]
+  saves          Save[]
+  shares         Share[]
+  videoSessions  VideoSession[]
+  comments       Comment[]
+  creditLots     CreditLot[]
+  creditPayments CreditPayment[]
 
   emailVerified   Boolean   @default(false)
   emailVerifiedAt DateTime?
@@ -50,6 +53,53 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("user")
+}
+
+enum CreditLotSource {
+  SIGNUP_BONUS
+  PURCHASE
+}
+
+model CreditLot {
+  id                       String          @id @default(uuid())
+  userId                   String
+  source                   CreditLotSource
+  totalCredits             Int
+  remainingCredits         Int
+  netRevenueCents          Int             @default(0)
+  remainingNetRevenueCents Int             @default(0)
+  stripeCheckoutSessionId  String?         @unique
+  createdAt                DateTime        @default(now())
+
+  user        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations BookingCreditAllocation[]
+
+  @@index([userId, createdAt])
+  @@map("credit_lot")
+}
+
+model CreditPayment {
+  id                String   @id @default(uuid())
+  userId            String
+  checkoutSessionId String   @unique
+  paymentIntentId   String?  @unique
+  creditAmount      Int
+  grossAmountCents  Int
+  netRevenueCents   Int
+  currency          String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_payment")
+}
+
+model StripeEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+
+  @@map("stripe_event")
 }
 
 model VerificationToken {

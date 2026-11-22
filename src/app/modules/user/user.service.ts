@@ -1,4 +1,4 @@
-import { Provider } from "@prisma/client";
+import { CreditLotSource, Provider } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../errorHelper/AppError";
 import httpStatus from "http-status";
@@ -24,16 +24,29 @@ const createUser = async (payload: CreateUserPayload) => {
     const hashedPassword = await bcrypt.hash(password as string, Number(envVar.BCRYPT_SALT_ROUND))
 
     const authProvider: IAuthProvider = { provider: Provider.CREDENTIALS, providerId: email as string }
+    const signupCredits = 100
 
 
     const user = await prisma.user.create({
         data: {
+            ...rest,
             email: email,
             password: hashedPassword,
+            creditBalance: signupCredits,
             auths: {
                 create: [authProvider]
             },
-            ...rest
+            ...(signupCredits > 0
+                ? {
+                    creditLots: {
+                        create: [{
+                            source: CreditLotSource.SIGNUP_BONUS,
+                            totalCredits: signupCredits,
+                            remainingCredits: signupCredits,
+                        }],
+                    },
+                }
+                : {}),
         },
         select: {
             id: true, name: true, email: true,
@@ -41,7 +54,7 @@ const createUser = async (payload: CreateUserPayload) => {
         }
     })
 
-    void sendVerificationEmail(user.email, user.name).catch((error: unknown) => {
+    void Promise.resolve(sendVerificationEmail(user.email, user.name)).catch((error: unknown) => {
         logger.warn({ err: error }, "Verification email could not be sent; user account was created");
     });
 
