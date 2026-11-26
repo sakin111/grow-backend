@@ -16,6 +16,7 @@ import { RedisStore } from "connect-redis"
 import { redisClient } from './app/lib/redis'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './app/config/swagger'
+import { BillingControllers } from './app/modules/billing/billing.controller'
 
 export const app: Application = express()
 
@@ -69,11 +70,19 @@ app.use(cors({
    allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
+
+app.post(
+  "/api/v1/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  BillingControllers.webhook
+);
+app.use(express.json()) 
 app.use(express.urlencoded({ extended: true }))
 
 // Swagger Docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
+app.use
 // router
 app.use("/api/v1", router)
 
@@ -94,4 +103,4 @@ app.get("/health", async (_req: Request, res: Response) => {
 })
 
 app.use(globalErrorHandler)
-app.use(notFound)
+app.use(notFound)
