@@ -82,7 +82,7 @@ app.use(express.urlencoded({ extended: true }))
 // Swagger Docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-app.use
+
 // router
 app.use("/api/v1", router)
 
