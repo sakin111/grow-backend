@@ -14,12 +14,12 @@ const creditPackages: Record<CreditPackage, {
 }> = {
   "100": {
     credits: 100,
-    amountCents: 500,
+    amountCents: 1000,
     priceId: envVar.STRIPE_CREDIT_PACK_100_PRICE_ID,
   },
   "500": {
     credits: 500,
-    amountCents: 2000,
+    amountCents: 4000,
     priceId: envVar.STRIPE_CREDIT_PACK_500_PRICE_ID,
   },
 };
